@@ -1,0 +1,27 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+data/
+results_pneumonia/
+cxr_*_lung_seg*/
+pneumonia_labels*.json
+ChexMask_MIMIC-CXR-JPG.csv
+
+# MIMIC-derived identifiers: distribute only through credentialed PhysioNet.
+splits/*.csv
+splits/AP_excluded_dicom_ids.json
+splits/*_split_meta.json
+
+checkpoints/*.pt
+checkpoints/*.pth
+checkpoints/*.safetensors
+eva-x/*.pt
+sam3/
+MedSAM3/
+
+wandb/
+runs/
+*.log

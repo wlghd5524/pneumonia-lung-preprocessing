@@ -1,0 +1,22 @@
+{
+  "split_seed": 42,
+  "n_folds": 5,
+  "outer_test_ratio": 0.15,
+  "outer_split_method": "StratifiedGroupKFold(n_splits=7), first split",
+  "AP": {
+    "pre_exclusion_images": 22899,
+    "pre_exclusion_subjects": 11953,
+    "excluded_images_without_usable_chexmask_rle": 5,
+    "released_images": 22894,
+    "released_subjects": 11951,
+    "outer_test_images": 3280,
+    "trainval_images": 19614
+  },
+  "PA": {
+    "released_images": 18609,
+    "released_subjects": 12385,
+    "outer_test_images": 2521,
+    "trainval_images": 16088
+  },
+  "identifier_files": "Available only through the credentialed companion PhysioNet project."
+}

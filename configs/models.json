@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "classification_backbones": {
+    "resnet152": {
+      "loader": "timm.create_model(pretrained=True)",
+      "model_name": "resnet152",
+      "pretrained_repository": "timm/resnet152.a1h_in1k",
+      "revision": "394d5cec41d60cbe669afd3e09cee61693582595",
+      "weight_file": "model.safetensors"
+    },
+    "densenet201": {
+      "loader": "timm.create_model(pretrained=True)",
+      "model_name": "densenet201",
+      "pretrained_repository": "timm/densenet201.tv_in1k",
+      "revision": "8d2e0f14ef7363343a1a15d6535db01e161ab3a9",
+      "weight_file": "model.safetensors"
+    },
+    "convnextv2_base": {
+      "loader": "timm.create_model(pretrained=True)",
+      "model_name": "convnextv2_base",
+      "pretrained_repository": "timm/convnextv2_base.fcmae_ft_in22k_in1k",
+      "revision": "9e250ed8f88b436472d2b24af26f82a8aa8c719d",
+      "weight_file": "model.safetensors"
+    },
+    "swinv2_base": {
+      "loader": "timm.create_model(pretrained=True)",
+      "model_name": "swinv2_base_window16_256",
+      "pretrained_repository": "timm/swinv2_base_window16_256.ms_in1k",
+      "revision": "9e2bc70d011c17e8ae6720bf731990a8970c9f0e",
+      "weight_file": "model.safetensors"
+    },
+    "dinov3_base": {
+      "loader": "timm.create_model(pretrained=True)",
+      "model_name": "vit_base_patch16_dinov3",
+      "pretrained_repository": "timm/vit_base_patch16_dinov3.lvd1689m",
+      "revision": "c6a5fb7d12bbd3cf3b0079253141c3332aaed7da",
+      "weight_file": "model.safetensors"
+    },
+    "eva_x_base": {
+      "loader": "eva-x/eva_x.py:get_evax_backbone",
+      "model_name": "eva_x_base",
+      "pretrained_repository": "MapleF/eva_x",
+      "weight_file": "eva_x_base_patch16_merged520k_mim.pt",
+      "sha256": "35dc7012c1a49cba01f5a31a8d777db39258078c85cfad3f3c9a41deb172e1b4",
+      "loader_sha256": "dbf1186dbfda2bac6a5f7fed76e1b5f1378e4d5c3b354abbf34b724b909d411f"
+    },
+    "rad_dino": {
+      "loader": "transformers.AutoModel.from_pretrained",
+      "model_name": "microsoft/rad-dino",
+      "pretrained_repository": "microsoft/rad-dino",
+      "revision": "110cbc18d5133582e320b43d53bf5c44e410c936",
+      "weight_file": "model.safetensors"
+    }
+  },
+  "lung_segmentation": {
+    "base_model": {
+      "repository": "facebookresearch/sam3",
+      "git_commit": "f6e51f59500a87c576c2df2323ce56b9fd7a12de",
+      "huggingface_repository": "facebook/sam3",
+      "huggingface_revision": "3c879f39826c281e95690f02c7821c4de09afae7",
+      "weight_file": "sam3.pt",
+      "installation": "Pinned git dependency in requirements.txt"
+    },
+    "medsam3_code": {
+      "repository": "Joey-S-Liu/MedSAM3",
+      "git_commit": "f79eef3f4ccfc880e63a0a5a758153137e75d34b",
+      "vendored_runtime": "preprocessing/lora_layers.py",
+      "vendored_runtime_sha256": "f62cd793ad94a4ec3feb21614f7ceed281630eca5178afd768f35eaaf3614a32"
+    },
+    "lora_checkpoint": {
+      "expected_path": "checkpoints/best_lora_weights.pt",
+      "sha256": "499e638bb7c51dbe0dcc3bfb9dbfada74fc2d725e953fbb5bdb2dd1b72106f91",
+      "config": "configs/medsam3_full_lora_config.yaml"
+    }
+  },
+  "fine_tuned_classification_checkpoints": {
+    "file_name": "best_model.pth",
+    "layout": "<results_root>/<run_name>/fold_<1-5>/best_model.pth",
+    "canonical_run_list": "configs/canonical_70runs.txt",
+    "manifest_command": "python tools/export_checkpoint_manifest.py --results-root /path/to/results_pneumonia --runs-file configs/canonical_70runs.txt",
+    "distribution_note": "MIMIC-derived model binaries are not committed to public Git. Publish them in a versioned, credentialed PhysioNet project under the source-data agreement and include the generated SHA256 manifest."
+  }
+}
