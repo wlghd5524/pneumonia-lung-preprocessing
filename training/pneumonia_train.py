@@ -12,9 +12,9 @@
     순수 5-fold 만 원하면 ``--no-outer-test`` (또는 ``--outer-test-ratio 0.0``).
     holdout 사용 시 결과 폴더명에 ``…_cv_Nfold_holdout15pct`` 처럼 비율이 붙음.
 - 설정: JSON config와 CLI 인자 (명시한 CLI가 우선)
-- 기본 데이터: ``<DATA_BASE_DIR>/cxr_medsam3_lung_seg_pa`` (manifest_pa_medsam3_ok.json 포함)
+- 기본 데이터: ``IEEE_ICCBE/cxr_medsam3_lung_seg`` (manifest_pa_medsam3_ok.json + masked_cxr_jpg 경로)
 - --view AP/both 로 AP·PA+AP 영상도 지원 (cxr_*_lung_seg_ap / cxr_*_lung_seg_pa_ap 폴더 자동 선택)
-- 라벨: 패키지 루트 ``pneumonia_labels.json``의 pneumonia 필드 (0=정상, 1=폐렴)
+- 라벨: ``IEEE_ICCBE/pneumonia_labels.json`` 에서 pneumonia 필드 (0=정상, 1=폐렴)
 - 멀티 GPU DDP 자동 재실행: **기본 꺼짐** (단일 ``python`` 프로세스, 보통 첫 GPU만 사용). 켜려면 ``--auto-ddp`` 또는 ``CXR_SINGLE_AUTO_DDP=1``. 수동으로는 ``torchrun --nproc_per_node=N ...`` 사용 가능.
 """
 
@@ -67,8 +67,10 @@ warnings.filterwarnings('ignore', message='.*is a low-contrast image.*')
 
 # 이 스크립트 파일의 위치를 기준으로 프로젝트 루트를 계산합니다.
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
-DATA_BASE_DIR = os.path.abspath(os.environ.get("DATA_BASE_DIR", PROJECT_ROOT))
+STUDY_DIR = os.path.dirname(SCRIPT_DIR)          # 저장소 루트 (코드, splits, configs, eva-x)
+PROJECT_ROOT = STUDY_DIR                           # EVA-X 가중치/로더는 저장소 안의 eva-x/
+# 전처리된 데이터셋(cxr_*), 라벨 JSON의 위치. 환경변수 DATA_BASE_DIR로 바꿀 수 있습니다.
+DATA_BASE_DIR = os.path.abspath(os.environ.get("DATA_BASE_DIR", STUDY_DIR))
 def default_eva_x_ckpt_path(model_name: str) -> str:
     """레포 루트 ``eva-x/<이름>.pt`` 가중치 경로. ``get_evax_backbone``은 파일 경로를 그대로 받음."""
     _fname = {
@@ -79,14 +81,12 @@ def default_eva_x_ckpt_path(model_name: str) -> str:
     return os.path.normpath(os.path.join(PROJECT_ROOT, 'eva-x', _fname))
 
 
-# EVA-X: Python 로더를 siamese 폴더에서 import (가중치 .pt는 ``eva-x/``)
+# EVA-X: Python 로더와 가중치 .pt 모두 ``eva-x/``
 get_evax_backbone = None  # type: ignore
 EVA_X_KNOWN_NAMES = ('eva_x_tiny', 'eva_x_small', 'eva_x_base')
 EVA_X_NAMES = EVA_X_KNOWN_NAMES
 for _eva_dir in (
     os.path.join(PROJECT_ROOT, 'eva-x'),
-    os.path.join(PROJECT_ROOT, 'siamese'),
-    os.path.join(PROJECT_ROOT, 'pair', 'siamese'),  # 레거시 위치 폴백 (pair/siamese/eva_x.py)
 ):
     if not os.path.isdir(_eva_dir):
         continue
@@ -177,6 +177,9 @@ def load_all_cxr_samples_with_groups(
     │ medsam3_crop │ cropped_cxr_jpg (MedSAM3 크롭)   │ manifest_{view_tag}_medsam3_ok.json              │
     │ chexmask_seg │ masked_cxr_jpg  (ChexMask 폐마스크│ manifest_{view_tag}_chexmask_ok.json             │
     │ chexmask_crop│ cropped_cxr_jpg (ChexMask 크롭)  │ manifest_{view_tag}_chexmask_ok.json             │
+    │ medsam3_center / medsam3_margin0 / medsam3_margin10 / medsam3_margin20                        │
+    │              │ cropped_cxr_jpg                  │ manifest_{view_tag}_medsam3_ok.json              │
+    │ medsam3_soft │ masked_cxr_jpg                   │ manifest_{view_tag}_medsam3_ok.json              │
     └──────────────┴───────────────────────────────────┴──────────────────────────────────────────────────┘
 
     view_tag 값 예:
@@ -205,6 +208,11 @@ def load_all_cxr_samples_with_groups(
         "medsam3_crop": "cropped_cxr_jpg",
         "chexmask_seg": "masked_cxr_jpg",
         "chexmask_crop":"cropped_cxr_jpg",
+        "medsam3_center":   "cropped_cxr_jpg",
+        "medsam3_margin0":  "cropped_cxr_jpg",
+        "medsam3_margin10": "cropped_cxr_jpg",
+        "medsam3_margin20": "cropped_cxr_jpg",
+        "medsam3_soft":     "masked_cxr_jpg",
     }
     # manifest seg tag: chexmask 계열은 "chexmask", 나머지는 "medsam3"
     _MODE_SEG_TAG = {
@@ -213,11 +221,18 @@ def load_all_cxr_samples_with_groups(
         "medsam3_crop": "medsam3",
         "chexmask_seg": "chexmask",
         "chexmask_crop":"chexmask",
+        "medsam3_center":   "medsam3",
+        "medsam3_margin0":  "medsam3",
+        "medsam3_margin10": "medsam3",
+        "medsam3_margin20": "medsam3",
+        "medsam3_soft":     "medsam3",
     }
     if data_mode not in _MODE_FIELD:
         raise ValueError(
             f"data_mode는 'raw' / 'medsam3_seg' / 'medsam3_crop' / "
-            f"'chexmask_seg' / 'chexmask_crop' 중 하나여야 합니다: {data_mode!r}"
+            f"'chexmask_seg' / 'chexmask_crop' / "
+            f"'medsam3_center' / 'medsam3_margin0' / 'medsam3_margin10' / "
+            f"'medsam3_margin20' / 'medsam3_soft' 중 하나여야 합니다: {data_mode!r}"
         )
     img_field = _MODE_FIELD[data_mode]
     seg_tag = _MODE_SEG_TAG[data_mode]
@@ -674,10 +689,18 @@ PREPROCESSING_MODES: Tuple[str, ...] = (
     "chexmask_seg",
     "chexmask_crop",
 )
+# 본 실험 5종과 같은 환자 목록의 추가 대조. 학습 시에만 parity 검사에 포함합니다.
+CONTROL_PREPROCESSING_MODES: Tuple[str, ...] = (
+    "medsam3_center",
+    "medsam3_margin0",
+    "medsam3_margin10",
+    "medsam3_margin20",
+    "medsam3_soft",
+)
 
 
 def infer_data_base_dir(data_root: str) -> str:
-    """``cxr_*_{ap,pa}`` 데이터 폴더의 상위 데이터 루트를 추정합니다."""
+    """``cxr_*_{ap,pa}`` 데이터 폴더의 상위 IEEE_ICCBE 루트를 추정합니다."""
     return os.path.dirname(os.path.normpath(str(data_root)))
 
 
@@ -694,7 +717,121 @@ def data_root_for_preprocessing(data_base_dir: str, view: str, data_mode: str) -
         return os.path.join(base, f"cxr_chexmask_lung_seg_{suffix}")
     if mode == "chexmask_crop":
         return os.path.join(base, f"cxr_chexmask_lung_seg_cropped_{suffix}")
+    if mode in CONTROL_PREPROCESSING_MODES:
+        tag = mode[len("medsam3_"):]
+        return os.path.join(base, f"cxr_medsam3_control_{tag}_{suffix}")
     raise ValueError(f"Unsupported preprocessing mode: {data_mode!r}")
+
+
+# CheXpert training-time uncertainty policies (Irvin et al., 2019).
+# explicit_only는 기존 0/1 학습과 동일하고, u_zero/u_one만 -1을 학습 라벨로 쓴다.
+UNCERTAINTY_POLICIES: Tuple[str, ...] = ("explicit_only", "u_zero", "u_one")
+UNCERTAINTY_POLICY_LABEL: Dict[str, int] = {"u_zero": 0, "u_one": 1}
+
+
+def uncertain_trainval_data_root(data_base_dir: str, view: str, data_mode: str) -> str:
+    """trainval 환자 Pneumonia=-1 영상의 전처리별 data_root.
+
+    ``finalize_uncertain_trainval_cohort.py``가 이 경로의 manifest를 교집합으로
+    고정하므로, 학습도 같은 규칙을 써야 Raw와 crop이 같은 영상을 추가한다.
+    """
+    view_tag = str(view).lower()
+    mode = str(data_mode).lower()
+    base = os.path.normpath(str(data_base_dir))
+    folder = {
+        "raw": f"cxr_medsam3_lung_seg_uncertain_trainval_{view_tag}",
+        "medsam3_seg": f"cxr_medsam3_lung_seg_uncertain_trainval_{view_tag}",
+        "medsam3_crop": f"cxr_medsam3_lung_seg_cropped_uncertain_trainval_{view_tag}",
+        "chexmask_seg": f"cxr_chexmask_lung_seg_uncertain_trainval_{view_tag}",
+        "chexmask_crop": f"cxr_chexmask_lung_seg_cropped_uncertain_trainval_{view_tag}",
+    }
+    if mode not in folder:
+        raise ValueError(
+            f"uncertainty training policy는 raw/medsam3/chexmask 전처리만 지원합니다: {data_mode!r}"
+        )
+    return os.path.join(base, folder[mode])
+
+
+def load_policy_training_additions(
+    *,
+    uncertain_root: str,
+    cohort_csv: str,
+    data_mode: str,
+    view_tag: str,
+    mapped_label: int,
+    source_image_root: Optional[str],
+    strict_grouping: bool,
+) -> Tuple[List[Tuple[Any, ...]], List[int], List[str], Dict[str, int]]:
+    """고정 cohort CSV의 -1 영상만 읽어 학습 라벨로 바꿉니다.
+
+    cohort에 없는 영상(outer-test 환자, 분할 밖 환자)은 넣지 않고,
+    cohort 영상이 하나라도 없으면 학습을 멈춥니다.
+    """
+    cohort_rows = _read_split_csv(cohort_csv)
+    cohort: Dict[str, Dict[str, int]] = {}
+    for row in cohort_rows:
+        dicom_id = str(row.get("dicom_id") or "")
+        if not dicom_id:
+            continue
+        if dicom_id in cohort:
+            raise RuntimeError(f"uncertainty cohort CSV에 dicom_id가 중복됩니다: {dicom_id}")
+        label = int(row["label"])
+        if label != -1:
+            raise RuntimeError(f"uncertainty cohort CSV 라벨은 -1이어야 합니다: {dicom_id}={label}")
+        cohort[dicom_id] = {
+            "subject_id": int(row["subject_id"]),
+            "fold": int(row["fold"]),
+        }
+    if not cohort:
+        raise RuntimeError(f"uncertainty cohort CSV가 비어 있습니다: {cohort_csv}")
+
+    items, labels, groups, metadata = load_all_cxr_samples_with_groups(
+        uncertain_root,
+        strict_grouping=strict_grouping,
+        labels_json_path=None,
+        data_mode=data_mode,
+        view_tag=view_tag,
+        source_image_root=source_image_root,
+        require_files=True,
+        return_metadata=True,
+    )
+    by_dicom: Dict[str, Tuple[Any, str]] = {}
+    for item, label, group, meta in zip(items, labels, groups, metadata):
+        dicom_id = str(meta.get("dicom_id") or "")
+        if dicom_id not in cohort:
+            continue
+        if int(label) != -1:
+            raise RuntimeError(
+                f"uncertainty manifest 라벨이 -1이 아닙니다: {dicom_id}={label} ({uncertain_root})"
+            )
+        spec = cohort[dicom_id]
+        subject_id = meta.get("subject_id")
+        if subject_id is None or int(subject_id) != spec["subject_id"]:
+            raise RuntimeError(
+                f"uncertainty 영상의 subject_id가 cohort CSV와 다릅니다: {dicom_id}"
+            )
+        if group != _group_id_from_subject(spec["subject_id"]):
+            raise RuntimeError(f"uncertainty 영상의 group_id가 subject와 다릅니다: {dicom_id}")
+        by_dicom[dicom_id] = (item, group)
+
+    missing = sorted(set(cohort) - set(by_dicom))
+    if missing:
+        raise RuntimeError(
+            f"cohort CSV 영상 {len(missing)}장이 {uncertain_root}에 없습니다. 예: {missing[:5]}"
+        )
+
+    out_items: List[Tuple[Any, ...]] = []
+    out_labels: List[int] = []
+    out_groups: List[str] = []
+    by_fold: Dict[str, int] = {}
+    for dicom_id, spec in cohort.items():
+        item, group = by_dicom[dicom_id]
+        out_items.append((item[0], int(mapped_label), item[2]))
+        out_labels.append(int(mapped_label))
+        out_groups.append(group)
+        fold_key = str(spec["fold"])
+        by_fold[fold_key] = by_fold.get(fold_key, 0) + 1
+    return out_items, out_labels, out_groups, by_fold
 
 
 def _metadata_to_sample_identity(metadata: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -806,8 +943,13 @@ def assert_preprocessing_sample_parity(
     if view_key not in ("AP", "PA"):
         return
 
+    modes = list(PREPROCESSING_MODES)
+    extra_mode = str(current_data_mode or "").lower()
+    if extra_mode and extra_mode not in modes:
+        modes.append(extra_mode)
+
     identities: Dict[str, Dict[str, Dict[str, Any]]] = {}
-    for mode in PREPROCESSING_MODES:
+    for mode in modes:
         mode_root = data_root_for_preprocessing(data_base_dir, view_key, mode)
         identities[mode] = load_preprocessing_sample_identity(
             mode_root,
@@ -824,7 +966,7 @@ def assert_preprocessing_sample_parity(
     ref_dicom_ids = set(ref_identity.keys())
     ref_subject_ids = {int(v["subject_id"]) for v in ref_identity.values() if v["subject_id"] is not None}
 
-    for mode in PREPROCESSING_MODES:
+    for mode in modes:
         if mode == ref_mode:
             continue
         cur = identities[mode]
@@ -890,7 +1032,7 @@ def assert_preprocessing_sample_parity(
         )
 
         outer_subjects, subject_fold = _subject_split_maps_from_dicom_table(split_table)
-        for mode in PREPROCESSING_MODES:
+        for mode in modes:
             mode_outer = {
                 int(identities[mode][dicom_id]["subject_id"])
                 for dicom_id in ref_dicom_ids
@@ -950,7 +1092,7 @@ def assert_preprocessing_sample_parity(
     print(
         f"✅ [{view_key}] preprocessing parity OK ({check_label}): "
         f"{len(ref_dicom_ids)} dicom_ids / {len(ref_subject_ids)} subjects across "
-        f"{len(PREPROCESSING_MODES)} modes"
+        f"{len(modes)} modes"
         + (f"; fixed split CSV verified ({split_dir})" if split_dir else "")
     )
 
@@ -1273,8 +1415,8 @@ class RadDinoSpatialBackbone(nn.Module):
             from transformers import AutoModel  # type: ignore
         except Exception as exc:
             raise RuntimeError(
-                "RAD-DINO를 사용하려면 requirements.txt의 transformers와 "
-                "safetensors를 설치해야 합니다."
+                "RAD-DINO를 사용하려면 conda sepsis 환경에 transformers와 "
+                "safetensors가 필요합니다."
             ) from exc
 
         self.model_name = _canonical_rad_dino_model_name(model_name)
@@ -1332,8 +1474,8 @@ class CheXficientSpatialBackbone(nn.Module):
             from safetensors.torch import load_file  # type: ignore
         except Exception as exc:
             raise RuntimeError(
-                "CheXficient를 사용하려면 requirements.txt의 "
-                "huggingface_hub와 safetensors를 설치해야 합니다."
+                "CheXficient를 사용하려면 conda sepsis 환경에 "
+                "huggingface_hub와 safetensors가 필요합니다."
             ) from exc
 
         self.model_name = _canonical_chexficient_model_name(model_name)
@@ -1409,7 +1551,7 @@ class CXRSpatialClassifier(nn.Module):
             if get_evax_backbone is None:
                 raise ImportError(
                     "EVA-X loader import failed. Expected eva_x.py under "
-                    f"{os.path.join(PROJECT_ROOT, 'eva-x')} or legacy siamese folders."
+                    f"{os.path.join(PROJECT_ROOT, 'eva-x')}."
                 )
             if not eva_x_ckpt_dir:
                 raise ValueError(
@@ -2857,7 +2999,7 @@ def build_default_config():
         'persistent_workers': True,
         'preload_images': True,
         'preload_workers': 16,
-        'npy_cache_dir': None,   # --npy-cache-dir 지정 시 preload 결과를 .npz로 저장 후 재사용
+        'npy_cache_dir': '/home/cglab/preload_cache_npy',   # preload 결과를 .npz 로 저장 후 재사용
         # cache_images_in_memory 제거됨 — preload_images 만 사용
         'use_bf16': True,  # 기본: bfloat16 autocast (GradScaler 없음, Ampere+ 권장). False면 fp16+GradScaler
         'use_fp32': False,  # True면 autocast 없이 float32 (메모리·시간↑, 수치 가장 안정)
@@ -3075,13 +3217,15 @@ def main():
             '유효하지 않을 때 source_image_rel_path 앞에 붙입니다.'
         ),
     )
-    parser.add_argument('--labels-json', type=str, default=None, help='pneumonia_labels.json 경로 (라벨 보완용). 기본: 패키지 루트/pneumonia_labels.json')
+    parser.add_argument('--labels-json', type=str, default=None, help='pneumonia_labels.json 경로 (라벨 보완용). 기본: IEEE_ICCBE/pneumonia_labels.json')
     parser.add_argument(
         '--data-mode', type=str, default='medsam3_seg',
         choices=[
             'raw',
             'medsam3_seg', 'medsam3_crop',
             'chexmask_seg', 'chexmask_crop',
+            'medsam3_center', 'medsam3_margin0', 'medsam3_margin10', 'medsam3_margin20',
+            'medsam3_soft',
             'masked', 'cropped',  # 하위 호환 alias
         ],
         help=(
@@ -3091,6 +3235,8 @@ def main():
             '  medsam3_crop  : MedSAM3 폐 마스크 기준 크롭 (cxr_medsam3_lung_seg_cropped)\n'
             '  chexmask_seg  : ChexMask 폐 영역만 남긴 CXR  (cxr_chexmask_lung_seg)\n'
             '  chexmask_crop : ChexMask 폐 마스크 기준 크롭 (cxr_chexmask_lung_seg_cropped)\n'
+            '  medsam3_center / medsam3_margin0 / medsam3_margin10 / medsam3_margin20 / medsam3_soft\n'
+            '                : 전처리 대조 (cxr_medsam3_control_*)\n'
             '  masked/cropped: 하위 호환 alias (medsam3_seg/medsam3_crop과 동일)'
         ),
     )
@@ -3138,6 +3284,37 @@ def main():
         '--require-files-for-parity',
         action='store_true',
         help='parity 검사 시 5 preprocessing mode 모두 실제 파일 존재까지 요구 (raw는 --source-image-root 필요).',
+    )
+    parser.add_argument(
+        '--uncertainty-policy',
+        type=str,
+        default='explicit_only',
+        choices=list(UNCERTAINTY_POLICIES),
+        help=(
+            '학습 단계에서 CheXpert Pneumonia=-1을 다루는 정책 (기본: explicit_only).\n'
+            '  explicit_only : 0/1만 학습. 기존 70-run과 동일\n'
+            '  u_zero        : train fold 환자의 -1을 0으로 보고 재학습\n'
+            '  u_one         : train fold 환자의 -1을 1로 보고 재학습\n'
+            '검증과 outer test는 세 정책 모두 기존 explicit 0/1만 사용합니다.'
+        ),
+    )
+    parser.add_argument(
+        '--uncertain-data-root',
+        type=str,
+        default=None,
+        help=(
+            'Pneumonia=-1 전처리 폴더. 미지정 시 data_base_dir 아래 '
+            'cxr_*_uncertain_trainval_{ap,pa}를 data-mode에 맞춰 사용합니다.'
+        ),
+    )
+    parser.add_argument(
+        '--uncertain-cohort-csv',
+        type=str,
+        default=None,
+        help=(
+            '학습에 넣을 -1 영상 고정 목록. 미지정 시 '
+            '{split-dir}/{VIEW}_uncertain_trainval.csv'
+        ),
     )
     parser.add_argument(
         '--split-seed',
@@ -3539,7 +3716,7 @@ def main():
 
     # view → view_tag(manifest 파일명), view_suffix(폴더 접미사) 결정
     _VIEW_TAG    = {"PA": "pa",    "AP": "ap",    "BOTH": "pa_ap"}
-    _VIEW_SUFFIX = {"PA": "_pa",   "AP": "_ap",   "BOTH": "_pa_ap"}
+    _VIEW_SUFFIX = {"PA": "",      "AP": "_ap",   "BOTH": "_pa_ap"}
     view_tag    = _VIEW_TAG.get(view, "pa")
     view_suffix = _VIEW_SUFFIX.get(view, "")
     # Split mode & CV folds (fix: cv5 must actually run)
@@ -3572,12 +3749,24 @@ def main():
     # 하위 호환 alias 정규화 (masked → medsam3_seg, cropped → medsam3_crop)
     _DM_ALIAS = {"masked": "medsam3_seg", "cropped": "medsam3_crop"}
     data_mode = _DM_ALIAS.get(data_mode, data_mode)
-    _VALID_MODES = ('raw', 'medsam3_seg', 'medsam3_crop', 'chexmask_seg', 'chexmask_crop')
+    _VALID_MODES = (
+        'raw', 'medsam3_seg', 'medsam3_crop', 'chexmask_seg', 'chexmask_crop',
+        *CONTROL_PREPROCESSING_MODES,
+    )
     if data_mode not in _VALID_MODES:
         raise ValueError(
             f"--data-mode는 {' / '.join(_VALID_MODES)} 중 하나여야 합니다: {data_mode!r}"
         )
     config['data_mode'] = data_mode
+
+    uncertainty_policy = str(getattr(args, 'uncertainty_policy', None) or 'explicit_only')
+    if uncertainty_policy not in UNCERTAINTY_POLICIES:
+        raise ValueError(
+            f"--uncertainty-policy는 {' / '.join(UNCERTAINTY_POLICIES)} 중 하나여야 합니다: "
+            f"{uncertainty_policy!r}"
+        )
+    config['uncertainty_policy'] = uncertainty_policy
+    config['uncertainty_mapped_label'] = UNCERTAINTY_POLICY_LABEL.get(uncertainty_policy)
 
     # 결과 폴더: results_pneumonia/… (data_mode + max_folds 있으면 폴더명에 반영)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -3589,6 +3778,10 @@ def main():
     if split_mode == 'cv5' and _otr_for_name > 0.0 and 'holdout' not in split_tag.lower():
         _h_pct = int(round(_otr_for_name * 100))
         split_tag = f"{split_tag}_holdout{_h_pct}pct"
+    if uncertainty_policy != 'explicit_only':
+        _policy_tag = 'uzero' if uncertainty_policy == 'u_zero' else 'uone'
+        if not split_tag.endswith(f"_{_policy_tag}"):
+            split_tag = f"{split_tag}_{_policy_tag}"
     _resume_dir_arg = getattr(args, 'resume_dir', None)
     _save_dir_arg = getattr(args, 'save_dir', None)
     if _save_dir_arg:
@@ -3695,13 +3888,18 @@ def main():
     validate_epoch_fn = validate_epoch_single
 
     # 데이터 루트 (CLI > config > data_mode+view별 기본 경로)
-    # view_suffix: PA="_pa" / AP="_ap" / BOTH="_pa_ap"
+    # view_suffix: PA="" / AP="_ap" / BOTH="_pa_ap"
     _default_root_by_mode = {
         'raw':           os.path.join(DATA_BASE_DIR, "cxr_medsam3_lung_seg"        + view_suffix),
         'medsam3_seg':   os.path.join(DATA_BASE_DIR, "cxr_medsam3_lung_seg"        + view_suffix),
         'medsam3_crop':  os.path.join(DATA_BASE_DIR, "cxr_medsam3_lung_seg_cropped" + view_suffix),
         'chexmask_seg':  os.path.join(DATA_BASE_DIR, "cxr_chexmask_lung_seg"       + view_suffix),
         'chexmask_crop': os.path.join(DATA_BASE_DIR, "cxr_chexmask_lung_seg_cropped" + view_suffix),
+        'medsam3_center':   os.path.join(DATA_BASE_DIR, f"cxr_medsam3_control_center_{view_tag}"),
+        'medsam3_margin0':  os.path.join(DATA_BASE_DIR, f"cxr_medsam3_control_margin0_{view_tag}"),
+        'medsam3_margin10': os.path.join(DATA_BASE_DIR, f"cxr_medsam3_control_margin10_{view_tag}"),
+        'medsam3_margin20': os.path.join(DATA_BASE_DIR, f"cxr_medsam3_control_margin20_{view_tag}"),
+        'medsam3_soft':     os.path.join(DATA_BASE_DIR, f"cxr_medsam3_control_soft_{view_tag}"),
     }
     if args.data_root:
         data_root = args.data_root
@@ -3715,7 +3913,7 @@ def main():
     if not labels_json_path:
         labels_json_path = config.get('labels_json_path')
     if not labels_json_path:
-        _default_labels = os.path.join(PROJECT_ROOT, "pneumonia_labels.json")
+        _default_labels = os.path.join(DATA_BASE_DIR, "pneumonia_labels.json")
         if os.path.isfile(_default_labels):
             labels_json_path = _default_labels
 
@@ -3777,6 +3975,11 @@ def main():
             'medsam3_crop':  'MedSAM3 폐크롭',
             'chexmask_seg':  'ChexMask 폐마스크',
             'chexmask_crop': 'ChexMask 폐크롭',
+            'medsam3_center':   'MedSAM3 가운데 크롭 (본 실험 크롭과 같은 가로·세로)',
+            'medsam3_margin0':  'MedSAM3 마진 0% 크롭',
+            'medsam3_margin10': 'MedSAM3 마진 10% 크롭',
+            'medsam3_margin20': 'MedSAM3 마진 20% 크롭',
+            'medsam3_soft':     'MedSAM3 soft mask',
         }
         print(f"   Data Mode: {data_mode}  ({_MODE_DESC.get(data_mode, data_mode)})")
         print(f"   Data Root: {data_root}")
@@ -3803,6 +4006,7 @@ def main():
               f"scale_p={config['aug_scale_prob']}, scale_lim={config['aug_scale_limit']}")
         print(f"   N Folds: {config['n_folds']}")
         print(f"   Loss Type: {config.get('loss_type', 'ce')} (alpha={config['focal_alpha']}, gamma={config['focal_gamma']}, smoothing={config['label_smoothing']})")
+        print(f"   Uncertainty training policy: {config.get('uncertainty_policy', 'explicit_only')}")
         print(f"   Downsample Negative: {config['downsample_negative']} (neg_per_pos={config['downsample_neg_per_pos']})")
         print(f"   Split Mode: {split_mode}")
         if split_mode == 'cv5':
@@ -3927,6 +4131,119 @@ def main():
         print(f"   outer_test      : {outer_csv}")
         print(f"   fold_assignment : {fold_csv}")
         return
+
+    # explicit 0/1만으로 parity·split 기준을 끝낸 뒤에 -1 영상을 붙입니다.
+    # explicit_only에서는 이 블록이 샘플 목록을 바꾸지 않습니다.
+    n_explicit = len(all_items)
+    uncertainty_audit: Dict[str, Any] = {
+        "analysis": "training_policy_sensitivity",
+        "policy": uncertainty_policy,
+        "mapped_label": config.get("uncertainty_mapped_label"),
+        "n_explicit_images": int(n_explicit),
+        "n_added_images": 0,
+        "evaluation_endpoint": "explicit_0_1_outer_test",
+        "per_fold": [],
+    }
+    if uncertainty_policy != "explicit_only":
+        if view not in ("AP", "PA"):
+            raise ValueError("--uncertainty-policy u_zero/u_one 은 --view AP 또는 PA에서만 사용할 수 있습니다.")
+        if not split_dir:
+            raise ValueError("--uncertainty-policy u_zero/u_one 에는 고정 split인 --split-dir 이 필요합니다.")
+        cohort_csv = getattr(args, "uncertain_cohort_csv", None) or os.path.join(
+            split_dir, f"{view}_uncertain_trainval.csv"
+        )
+        cohort_csv = os.path.normpath(str(cohort_csv))
+        if not os.path.isfile(cohort_csv):
+            raise FileNotFoundError(
+                f"uncertainty cohort CSV가 없습니다: {cohort_csv}\n"
+                "먼저 build_uncertain_endpoint_labels.py --scope trainval 과 "
+                "finalize_uncertain_trainval_cohort.py 를 실행하세요."
+            )
+        data_base_dir = config.get("data_base_dir") or infer_data_base_dir(data_root)
+        config["data_base_dir"] = data_base_dir
+        uncertain_root = getattr(args, "uncertain_data_root", None) or uncertain_trainval_data_root(
+            data_base_dir, view, data_mode
+        )
+        uncertain_root = os.path.normpath(str(uncertain_root))
+        mapped_label = int(UNCERTAINTY_POLICY_LABEL[uncertainty_policy])
+        _fold_of_subject: Dict[int, int] = {}
+        for _row in _read_split_csv(os.path.join(split_dir, f"{view}_fold_assignment.csv")):
+            if _row.get("subject_id") in (None, ""):
+                continue
+            _fold_of_subject[int(_row["subject_id"])] = int(_row["fold"])
+        for _row in _read_split_csv(cohort_csv):
+            _sid = int(_row["subject_id"])
+            _fold = int(_row["fold"])
+            if _fold_of_subject.get(_sid) != _fold:
+                raise RuntimeError(
+                    f"cohort CSV의 fold가 고정 split과 다릅니다: subject {_sid}, "
+                    f"cohort fold={_fold}, split fold={_fold_of_subject.get(_sid)}"
+                )
+        unc_items, unc_labels, unc_groups, unc_by_fold = load_policy_training_additions(
+            uncertain_root=uncertain_root,
+            cohort_csv=cohort_csv,
+            data_mode=data_mode,
+            view_tag=view_tag,
+            mapped_label=mapped_label,
+            source_image_root=source_image_root,
+            strict_grouping=strict_grouping,
+        )
+        outer_csv_path, _fold_csv_path = _split_csv_paths(split_dir, view)
+        outer_subjects = {
+            int(row["subject_id"])
+            for row in _read_split_csv(outer_csv_path)
+            if row.get("subject_id") not in (None, "")
+        }
+        leaked_subjects = sorted({
+            int(str(group)[3:])
+            for group in unc_groups
+            if int(str(group)[3:]) in outer_subjects
+        })
+        if leaked_subjects:
+            raise RuntimeError(
+                "[LEAKAGE] outer-test 환자의 uncertainty 영상이 학습 목록에 있습니다: "
+                f"{leaked_subjects[:10]}"
+            )
+        explicit_dicom_ids = {
+            str(row.get("dicom_id") or "")
+            for row in _read_split_csv(outer_csv_path) + _read_split_csv(_fold_csv_path)
+        }
+        cohort_dicoms = {str(row.get("dicom_id") or "") for row in _read_split_csv(cohort_csv)}
+        overlap_dicoms = sorted(explicit_dicom_ids & cohort_dicoms)
+        if overlap_dicoms:
+            raise RuntimeError(
+                "uncertainty cohort가 기존 0/1 split과 dicom_id가 겹칩니다: "
+                f"{overlap_dicoms[:5]}"
+            )
+        all_items = list(all_items) + list(unc_items)
+        all_labels = list(all_labels) + list(unc_labels)
+        all_groups = list(all_groups) + list(unc_groups)
+        config["uncertain_cohort_csv"] = cohort_csv
+        config["uncertain_data_root"] = uncertain_root
+        uncertainty_audit.update({
+            "cohort_csv": cohort_csv,
+            "uncertain_data_root": uncertain_root,
+            "n_added_images": int(len(unc_items)),
+            "n_added_subjects": int(len(set(unc_groups))),
+            "added_by_patient_fold": unc_by_fold,
+            "mapped_label": mapped_label,
+        })
+        if rank == 0:
+            print(
+                f"🏷️ Uncertainty training policy={uncertainty_policy}: "
+                f"-1 {len(unc_items):,}장을 {mapped_label}로 변환해 학습 목록에 추가 "
+                f"(explicit {n_explicit:,}장은 그대로, 검증/outer test에는 넣지 않음)"
+            )
+            print(f"   cohort CSV : {cohort_csv}")
+            print(f"   data root  : {uncertain_root}")
+            print(f"   환자 fold별 장수 (그 fold 검증 환자라 해당 fold 학습에는 안 들어감): {unc_by_fold}")
+        if rank == 0:
+            run_meta["uncertainty_training_policy"] = uncertainty_audit
+            try:
+                with open(os.path.join(save_dir, "run_meta.json"), "w", encoding="utf-8") as f:
+                    json.dump(run_meta, f, indent=2)
+            except Exception as meta_err:
+                print(f"⚠️ run_meta.json 갱신 실패: {meta_err}")
 
     if bool(config.get('preload_images', True)):
         preloaded_images = preload_all_images_single(
@@ -4124,6 +4441,52 @@ def main():
         split_assignment,
     )
 
+    if uncertainty_policy != "explicit_only":
+        leaked_test = [int(i) for i in outer_test_idx if int(i) >= n_explicit]
+        if leaked_test:
+            raise RuntimeError(
+                "[LEAKAGE] outer test에 uncertainty 영상이 들어 있습니다. "
+                "평가 endpoint는 explicit 0/1만 사용해야 합니다."
+            )
+        filtered_folds = []
+        per_fold_plan = []
+        for fold_i, (train_idx, val_idx) in enumerate(active_fold_indices, start=1):
+            val_groups = {all_groups[int(i)] for i in val_idx if int(i) < n_explicit}
+            removed = [int(i) for i in val_idx if int(i) >= n_explicit]
+            stray = [i for i in removed if all_groups[i] not in val_groups]
+            if stray:
+                raise RuntimeError(
+                    f"[LEAKAGE] fold {fold_i}: 다른 fold 환자의 uncertainty 영상이 validation에 있습니다."
+                )
+            bad_train = [
+                int(i) for i in train_idx
+                if int(i) >= n_explicit and all_groups[int(i)] in val_groups
+            ]
+            if bad_train:
+                raise RuntimeError(
+                    f"[LEAKAGE] fold {fold_i}: validation 환자의 uncertainty 영상이 학습 목록에 있습니다."
+                )
+            val_explicit = np.asarray(
+                [int(i) for i in val_idx if int(i) < n_explicit],
+                dtype=np.int64,
+            )
+            filtered_folds.append((np.asarray(train_idx, dtype=np.int64), val_explicit))
+            per_fold_plan.append({
+                "fold": int(fold_i),
+                "n_uncertain_in_train": int(sum(int(i) >= n_explicit for i in train_idx)),
+                "n_uncertain_removed_from_val": int(len(removed)),
+                "n_explicit_train": int(sum(int(i) < n_explicit for i in train_idx)),
+                "n_explicit_val": int(len(val_explicit)),
+            })
+        active_fold_indices = filtered_folds
+        uncertainty_audit["per_fold"] = per_fold_plan
+        if rank == 0:
+            added_msg = ", ".join(
+                f"fold{row['fold']}={row['n_uncertain_in_train']}" for row in per_fold_plan
+            )
+            print(f"🏷️ fold별 학습에 추가되는 uncertainty 영상: {added_msg}")
+            print("🏷️ validation과 outer test는 explicit 0/1만 남겼습니다.")
+
     active_group_set = set(all_groups)
     reference_group_set = (
         set(split_assignment["outer_trainval_groups"])
@@ -4155,6 +4518,7 @@ def main():
             "outer_test_n_subjects": int(len({all_groups[int(i)] for i in outer_test_idx})),
         },
         "assignment": split_assignment,
+        "uncertainty_training_policy": uncertainty_audit,
     }
     if rank == 0:
         with open(os.path.join(save_dir, 'split_assignment.json'), 'w', encoding='utf-8') as f:
@@ -4271,7 +4635,14 @@ def main():
                     _ds_seed_inner = config['seed'] + fold_idx + 1000
                     train_inner_idx = downsample_negative_to_ratio(train_inner_idx, all_labels, neg_per_pos=neg_per_pos, seed=_ds_seed_inner)
                     print(f"🔧 Downsample negative (cv5 inner, neg_per_pos={neg_per_pos:.4f}, seed={_ds_seed_inner}) | train -> {len(train_inner_idx)}")
-            
+
+            # 내부 검증도 explicit 0/1만 쓴다. 학습 환자 uncertainty는 학습에 남긴다.
+            if uncertainty_policy != "explicit_only":
+                held_out_uncertain = [i for i in val_inner_idx if int(i) >= n_explicit]
+                if held_out_uncertain:
+                    val_inner_idx = [i for i in val_inner_idx if int(i) < n_explicit]
+                    train_inner_idx = list(train_inner_idx) + held_out_uncertain
+
             # Recalculate imbalance_ratio for inner train split
             train_inner_labels = [all_labels[i] for i in train_inner_idx]
             pos_count = sum(train_inner_labels); neg_count = len(train_inner_labels) - pos_count
@@ -4307,6 +4678,30 @@ def main():
             else:
                 train_loader = DataLoader(train_dataset, shuffle=True, collate_fn=collate_skip_none, **loader_kwargs)
             val_loader = DataLoader(val_dataset, shuffle=False, collate_fn=collate_skip_none, **eval_loader_kwargs)
+
+        if uncertainty_policy != "explicit_only":
+            train_for_weight = train_inner_idx if getattr(args, 'cv5_inner_811', False) else train_indices
+            n_unc_loss = int(sum(int(i) >= n_explicit for i in train_for_weight))
+            if any(int(i) >= n_explicit for i in val_idx.tolist()):
+                raise RuntimeError(f"[LEAKAGE] fold {fold_idx+1} validation에 uncertainty 영상이 남아 있습니다.")
+            if rank == 0:
+                print(
+                    f"🏷️ Fold {fold_idx+1} {uncertainty_policy}: "
+                    f"학습 uncertainty {n_unc_loss}장, pos_weight={imbalance_ratio:.4f} "
+                    f"(neg={int(neg_count)}, pos={int(pos_count)}, 이 fold 학습 라벨로 재계산)"
+                )
+                for row in uncertainty_audit.get("per_fold", []):
+                    if int(row.get("fold", -1)) == fold_idx + 1:
+                        row["train_pos"] = int(pos_count)
+                        row["train_neg"] = int(neg_count)
+                        row["pos_weight"] = float(imbalance_ratio)
+                        row["n_uncertain_used_in_loss"] = n_unc_loss
+                        break
+                try:
+                    with open(os.path.join(save_dir, "uncertainty_training_audit.json"), "w", encoding="utf-8") as f:
+                        json.dump(uncertainty_audit, f, indent=2)
+                except Exception as audit_err:
+                    print(f"⚠️ uncertainty audit 저장 실패: {audit_err}")
 
         if rank == 0:
             print(f"📊 Train: {len(train_dataset)}, Val: {len(val_dataset)}")
@@ -5645,6 +6040,7 @@ def main():
         'outer_test_enabled': bool(use_outer_test),
         'outer_test_ratio': float(args.outer_test_ratio) if use_outer_test else 0.0,
         'outer_test_n_samples': int(len(outer_test_idx)) if use_outer_test else 0,
+        'uncertainty_training_policy': uncertainty_audit,
     }
     if rank == 0:
         with open(os.path.join(save_dir, 'summary.json'), 'w') as f:

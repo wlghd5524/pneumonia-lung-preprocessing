@@ -31,13 +31,7 @@ from PIL import Image
 from concurrent.futures import ThreadPoolExecutor
 from torchvision import transforms
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-PACKAGE_ROOT = SCRIPT_DIR.parent
-TRAINING_DIR = PACKAGE_ROOT / "training"
-for _source_dir in (SCRIPT_DIR, TRAINING_DIR):
-    if str(_source_dir) not in sys.path:
-        sys.path.insert(0, str(_source_dir))
-
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "training"))
 from generate_figure6_gradcam import (
     load_crop_manifest,
     remap_path,
@@ -57,9 +51,11 @@ from pneumonia_train import (
     _load_state_dict_compat,
 )
 
-RESULTS = Path(os.environ.get("RESULTS_DIR", PACKAGE_ROOT / "results_pneumonia")).resolve()
-SPLITS = Path(os.environ.get("SPLIT_DIR", PACKAGE_ROOT / "splits")).resolve()
-OUT_DIR = RESULTS / "lung_attribution_concentration"
+STUDY_DIR = Path(__file__).resolve().parents[1]
+RESULTS_DIR = Path(os.environ.get("RESULTS_DIR", STUDY_DIR / "results_pneumonia")).resolve()
+RESULTS = RESULTS_DIR
+SPLITS = STUDY_DIR / "splits"
+OUT_DIR = RESULTS / "analysis_outputs" / "lung_attribution_concentration"
 
 MODELS = ("resnet152", "rad_dino")
 VIEWS = ("AP", "PA")
@@ -821,7 +817,7 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(summary_rows)
     json_path.write_text(json.dumps(summary_rows, indent=2), encoding="utf-8")
-    results_md = RESULTS / "Supplementary_Table_lung_attribution_concentration.md"
+    results_md = RESULTS / "paper_tables" / "Supplementary_Table_lung_attribution_concentration.md"
     if int(args.limit) == 0 and out_dir.resolve() == OUT_DIR.resolve():
         results_md.write_text(md + "\n", encoding="utf-8")
     print(f"[done] per-image {combined} rows={len(rows)}", flush=True)

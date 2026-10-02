@@ -32,12 +32,7 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent
-TRAINING_DIR = PROJECT_ROOT / "training"
-if str(TRAINING_DIR) not in sys.path:
-    sys.path.insert(0, str(TRAINING_DIR))
-
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "training"))
 from pneumonia_train import (
     CXRSpatialClassifier,
     _binary_logits_from_outputs,
@@ -46,7 +41,10 @@ from pneumonia_train import (
 )
 
 
-RESULTS_ROOT = Path(os.environ.get("RESULTS_DIR", PROJECT_ROOT / "results_pneumonia")).resolve()
+STUDY_DIR = Path(__file__).resolve().parents[1]
+RESULTS_DIR = Path(os.environ.get("RESULTS_DIR", STUDY_DIR / "results_pneumonia")).resolve()
+DATA_BASE_DIR = Path(os.environ.get("DATA_BASE_DIR", STUDY_DIR)).resolve()
+RESULTS_ROOT = RESULTS_DIR
 
 
 DEFAULT_RUNS: Dict[str, Dict[str, Dict[str, str]]] = {
@@ -161,7 +159,7 @@ def manifest_path(view: str, mode: str) -> Path:
         root_name = f"cxr_{'chexmask' if seg == 'chexmask' else 'medsam3'}_lung_seg_cropped_{view_tag}"
     else:
         root_name = f"cxr_{'chexmask' if seg == 'chexmask' else 'medsam3'}_lung_seg_{view_tag}"
-    return SCRIPT_DIR / root_name / f"manifest_{view_tag}_{seg}_ok.json"
+    return DATA_BASE_DIR / root_name / f"manifest_{view_tag}_{seg}_ok.json"
 
 
 def build_manifest_index(manifest_file: Path) -> Dict[str, dict]:

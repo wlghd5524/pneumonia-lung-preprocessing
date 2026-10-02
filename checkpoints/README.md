@@ -27,13 +27,13 @@ Fine-tuned classifier checkpoints retain the training output layout:
 
 `1997eb174087c69df2d70db32055f3f3dc5962c100bc4928b3dd38c177a2cd6b`
 
-Before release, store those MIMIC-derived model files in a versioned,
-credentialed PhysioNet project under the source-data agreement and generate
-the exact file manifest:
+The fold-specific trained checkpoints are not currently redistributed through
+this public repository. `trained_checkpoint_manifest.csv` records sizes and
+checksums only. Regenerate that list from a local results folder with:
 
 ```bash
 python tools/export_checkpoint_manifest.py \
   --results-root /path/to/results_pneumonia \
-  --runs-file configs/canonical_70runs.txt \
+  --runs-file results/primary/canonical_70runs.txt \
   --output checkpoints/trained_checkpoint_manifest.csv
 ```

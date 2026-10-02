@@ -35,7 +35,7 @@ def main() -> None:
         "--runs-file",
         type=Path,
         default=None,
-        help="Optional one-run-name-per-line file; use configs/canonical_70runs.txt for the paper models.",
+        help="Optional one-run-name-per-line file; use results/primary/canonical_70runs.txt for the paper models.",
     )
     args = parser.parse_args()
 

@@ -5,35 +5,35 @@
       "loader": "timm.create_model(pretrained=True)",
       "model_name": "resnet152",
       "pretrained_repository": "timm/resnet152.a1h_in1k",
-      "revision": "394d5cec41d60cbe669afd3e09cee61693582595",
+      "commit": "394d5cec41d60cbe669afd3e09cee61693582595",
       "weight_file": "model.safetensors"
     },
     "densenet201": {
       "loader": "timm.create_model(pretrained=True)",
       "model_name": "densenet201",
       "pretrained_repository": "timm/densenet201.tv_in1k",
-      "revision": "8d2e0f14ef7363343a1a15d6535db01e161ab3a9",
+      "commit": "8d2e0f14ef7363343a1a15d6535db01e161ab3a9",
       "weight_file": "model.safetensors"
     },
     "convnextv2_base": {
       "loader": "timm.create_model(pretrained=True)",
       "model_name": "convnextv2_base",
       "pretrained_repository": "timm/convnextv2_base.fcmae_ft_in22k_in1k",
-      "revision": "9e250ed8f88b436472d2b24af26f82a8aa8c719d",
+      "commit": "9e250ed8f88b436472d2b24af26f82a8aa8c719d",
       "weight_file": "model.safetensors"
     },
     "swinv2_base": {
       "loader": "timm.create_model(pretrained=True)",
       "model_name": "swinv2_base_window16_256",
       "pretrained_repository": "timm/swinv2_base_window16_256.ms_in1k",
-      "revision": "9e2bc70d011c17e8ae6720bf731990a8970c9f0e",
+      "commit": "9e2bc70d011c17e8ae6720bf731990a8970c9f0e",
       "weight_file": "model.safetensors"
     },
     "dinov3_base": {
       "loader": "timm.create_model(pretrained=True)",
       "model_name": "vit_base_patch16_dinov3",
       "pretrained_repository": "timm/vit_base_patch16_dinov3.lvd1689m",
-      "revision": "c6a5fb7d12bbd3cf3b0079253141c3332aaed7da",
+      "commit": "c6a5fb7d12bbd3cf3b0079253141c3332aaed7da",
       "weight_file": "model.safetensors"
     },
     "eva_x_base": {
@@ -48,7 +48,7 @@
       "loader": "transformers.AutoModel.from_pretrained",
       "model_name": "microsoft/rad-dino",
       "pretrained_repository": "microsoft/rad-dino",
-      "revision": "110cbc18d5133582e320b43d53bf5c44e410c936",
+      "commit": "110cbc18d5133582e320b43d53bf5c44e410c936",
       "weight_file": "model.safetensors"
     }
   },
@@ -57,7 +57,7 @@
       "repository": "facebookresearch/sam3",
       "git_commit": "f6e51f59500a87c576c2df2323ce56b9fd7a12de",
       "huggingface_repository": "facebook/sam3",
-      "huggingface_revision": "3c879f39826c281e95690f02c7821c4de09afae7",
+      "huggingface_commit": "3c879f39826c281e95690f02c7821c4de09afae7",
       "weight_file": "sam3.pt",
       "installation": "Pinned git dependency in requirements.txt"
     },
@@ -76,8 +76,8 @@
   "fine_tuned_classification_checkpoints": {
     "file_name": "best_model.pth",
     "layout": "<results_root>/<run_name>/fold_<1-5>/best_model.pth",
-    "canonical_run_list": "configs/canonical_70runs.txt",
-    "manifest_command": "python tools/export_checkpoint_manifest.py --results-root /path/to/results_pneumonia --runs-file configs/canonical_70runs.txt",
-    "distribution_note": "MIMIC-derived model binaries are not committed to public Git. Publish them in a versioned, credentialed PhysioNet project under the source-data agreement and include the generated SHA256 manifest."
+    "canonical_run_list": "results/primary/canonical_70runs.txt",
+    "manifest": "checkpoints/trained_checkpoint_manifest.csv",
+    "distribution_note": "Fold-specific trained checkpoints are not currently redistributed. The manifest records file sizes and SHA256 checksums only."
   }
 }

@@ -7,9 +7,10 @@ the five maps are averaged and min–max scaled.
 """
 from __future__ import annotations
 
+import os
+
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -20,14 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image, ImageDraw
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-PACKAGE_ROOT = SCRIPT_DIR.parent
-PREPROCESSING_DIR = PACKAGE_ROOT / "preprocessing"
-DATA_BASE_DIR = Path(os.environ.get("DATA_BASE_DIR", PACKAGE_ROOT)).resolve()
-for _source_dir in (SCRIPT_DIR, PREPROCESSING_DIR):
-    if str(_source_dir) not in sys.path:
-        sys.path.insert(0, str(_source_dir))
-
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "preprocessing"))
 from build_cxr_lung_crop_dataset import crop_with_mask, load_npy_mask_as_pil
 from generate_gradcam_pneumonia import (
     DEFAULT_RUNS,
@@ -39,8 +33,11 @@ from generate_gradcam_pneumonia import (
     select_label_available_samples,
 )
 
-RESULTS = Path(os.environ.get("RESULTS_DIR", PACKAGE_ROOT / "results_pneumonia")).resolve()
-OUT_DIR = RESULTS / "figure6_gradcam"
+STUDY_DIR = Path(__file__).resolve().parents[1]
+DATA_BASE_DIR = Path(os.environ.get("DATA_BASE_DIR", STUDY_DIR)).resolve()
+RESULTS_DIR = Path(os.environ.get("RESULTS_DIR", STUDY_DIR / "results_pneumonia")).resolve()
+RESULTS = RESULTS_DIR
+OUT_DIR = RESULTS / "analysis_outputs" / "figure6_gradcam"
 
 MODES = ("raw", "medsam3_crop", "chexmask_crop")
 MODE_TITLE = {
@@ -86,6 +83,7 @@ DISPLAY_MAX_SIDE = 960
 
 def remap_path(path: str) -> str:
     text = str(path)
+    text = text.replace("/mnt/d/CXR-Sepsis-Prediction/IEEE_ICCBE", str(DATA_BASE_DIR))
     text = text.replace(
         "/mnt/e/MIMIC-CXR/physionet.org/files/mimic-cxr-jpg/2.1.0",
         os.environ.get("MIMIC_CXR_ROOT", str(DATA_BASE_DIR / "data" / "mimic-cxr-jpg" / "2.1.0")),

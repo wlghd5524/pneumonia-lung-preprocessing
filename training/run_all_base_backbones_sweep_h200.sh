@@ -57,15 +57,15 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+STUDY_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "$STUDY_DIR"
 
-PACKAGE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TRAIN_PY="${SCRIPT_DIR}/pneumonia_train.py"
-DATA_BASE_DIR="${DATA_BASE_DIR:-$PACKAGE_ROOT}"
+DATA_BASE_DIR="${DATA_BASE_DIR:-$STUDY_DIR}"
 MIMIC_CXR_ROOT="${MIMIC_CXR_ROOT:-}"
-RESULTS_ROOT="${RESULTS_ROOT:-${PACKAGE_ROOT}/results_pneumonia}"
+RESULTS_ROOT="${RESULTS_ROOT:-${STUDY_DIR}/results_pneumonia}"
 export RESULTS_ROOT
-NPY_CACHE_DIR="${NPY_CACHE_DIR:-${PACKAGE_ROOT}/preload_cache_npy_h200}"
+NPY_CACHE_DIR="${NPY_CACHE_DIR:-${STUDY_DIR}/preload_cache_npy_h200}"
 LOG_DIR="${LOG_DIR:-${RESULTS_ROOT}/logs}"
 
 CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"
@@ -86,7 +86,7 @@ resolve_mimic_cxr_root() {
     candidates+=("$MIMIC_CXR_ROOT")
   else
     candidates+=(
-      "${SCRIPT_DIR}/../mimic-cxr-jpg/2.1.0"
+      "${STUDY_DIR}/../mimic-cxr-jpg/2.1.0"
       "${DATA_BASE_DIR}/../mimic-cxr-jpg/2.1.0"
       "/data/mimic-cxr-jpg/2.1.0"
     )
@@ -118,8 +118,8 @@ resolve_python() {
     py_candidates+=("${VIRTUAL_ENV}/bin/python")
   fi
   py_candidates+=(
-    "${SCRIPT_DIR}/.venv/bin/python"
-    "${SCRIPT_DIR}/../.venv/bin/python"
+    "${STUDY_DIR}/.venv/bin/python"
+    "${STUDY_DIR}/../.venv/bin/python"
     "${HOME}/.local/bin/python3"
     "/usr/bin/python3"
   )
@@ -187,7 +187,7 @@ done
 MAX_FOLDS="${MAX_FOLDS:-5}"
 OUTER_TEST_RATIO="${OUTER_TEST_RATIO:-0.15}"
 USE_SPLIT_REFERENCE="${USE_SPLIT_REFERENCE:-1}"
-SPLIT_DIR="${SPLIT_DIR:-${PACKAGE_ROOT}/splits}"
+SPLIT_DIR="${SPLIT_DIR:-${STUDY_DIR}/splits}"
 SPLIT_SEED="${SPLIT_SEED:-42}"
 TRAINING_SEED="${TRAINING_SEED:-42}"
 
@@ -290,6 +290,9 @@ data_root_for() {
       ;;
     chexmask_crop)
       printf '%s/cxr_chexmask_lung_seg_cropped_%s\n' "$DATA_BASE_DIR" "$suffix"
+      ;;
+    medsam3_center|medsam3_margin0|medsam3_margin10|medsam3_margin20|medsam3_soft)
+      printf '%s/cxr_medsam3_control_%s_%s\n' "$DATA_BASE_DIR" "${mode#medsam3_}" "$suffix"
       ;;
     *)
       echo "오류: 지원하지 않는 data mode입니다: $mode" >&2

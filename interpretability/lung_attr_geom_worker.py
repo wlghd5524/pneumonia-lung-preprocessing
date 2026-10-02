@@ -4,8 +4,12 @@ Kept separate so process-pool workers do not import torch / pneumonia_train.
 """
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 from PIL import Image
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "preprocessing"))
 from build_cxr_lung_crop_dataset import crop_with_mask, load_npy_mask_as_pil
 
 STUDY_CROP_KWARGS = dict(
