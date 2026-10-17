@@ -30,6 +30,13 @@ saved predictions; it cannot repeat the training.
 MIMIC-CXR-JPG v2.1.0 is available only to credentialed PhysioNet users:
 https://physionet.org/content/mimic-cxr-jpg/2.1.0/
 
+## License
+
+The code and documents written for this study are released under the MIT
+License (`LICENSE`). `eva-x/eva_x.py` and `preprocessing/lora_layers.py` come
+from other projects and keep their own terms, and model weights and data are
+not covered. See `THIRD_PARTY_NOTICES.md`.
+
 ## Repository layout
 
 ```text
