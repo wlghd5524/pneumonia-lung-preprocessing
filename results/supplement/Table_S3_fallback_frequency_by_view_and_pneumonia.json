@@ -1,0 +1,85 @@
+{
+  "rows": [
+    {
+      "Mask source": "MedSAM3",
+      "View": "AP",
+      "Pneumonia": "Negative",
+      "N images": 11515,
+      "Mask failure, n": 0,
+      "Mask failure, %": 0.0,
+      "Center-crop fallback, n": 43,
+      "Center-crop fallback, %": 0.37
+    },
+    {
+      "Mask source": "MedSAM3",
+      "View": "AP",
+      "Pneumonia": "Positive",
+      "N images": 11379,
+      "Mask failure, n": 2,
+      "Mask failure, %": 0.02,
+      "Center-crop fallback, n": 67,
+      "Center-crop fallback, %": 0.59
+    },
+    {
+      "Mask source": "MedSAM3",
+      "View": "PA",
+      "Pneumonia": "Negative",
+      "N images": 12781,
+      "Mask failure, n": 0,
+      "Mask failure, %": 0.0,
+      "Center-crop fallback, n": 2,
+      "Center-crop fallback, %": 0.02
+    },
+    {
+      "Mask source": "MedSAM3",
+      "View": "PA",
+      "Pneumonia": "Positive",
+      "N images": 5828,
+      "Mask failure, n": 0,
+      "Mask failure, %": 0.0,
+      "Center-crop fallback, n": 3,
+      "Center-crop fallback, %": 0.05
+    },
+    {
+      "Mask source": "CheXMask",
+      "View": "AP",
+      "Pneumonia": "Negative",
+      "N images": 11515,
+      "Mask failure, n": 0,
+      "Mask failure, %": 0.0,
+      "Center-crop fallback, n": 5,
+      "Center-crop fallback, %": 0.04
+    },
+    {
+      "Mask source": "CheXMask",
+      "View": "AP",
+      "Pneumonia": "Positive",
+      "N images": 11379,
+      "Mask failure, n": 0,
+      "Mask failure, %": 0.0,
+      "Center-crop fallback, n": 3,
+      "Center-crop fallback, %": 0.03
+    },
+    {
+      "Mask source": "CheXMask",
+      "View": "PA",
+      "Pneumonia": "Negative",
+      "N images": 12781,
+      "Mask failure, n": 0,
+      "Mask failure, %": 0.0,
+      "Center-crop fallback, n": 0,
+      "Center-crop fallback, %": 0.0
+    },
+    {
+      "Mask source": "CheXMask",
+      "View": "PA",
+      "Pneumonia": "Positive",
+      "N images": 5828,
+      "Mask failure, n": 0,
+      "Mask failure, %": 0.0,
+      "Center-crop fallback, n": 1,
+      "Center-crop fallback, %": 0.02
+    }
+  ],
+  "n_total_pairs": 41503
+}

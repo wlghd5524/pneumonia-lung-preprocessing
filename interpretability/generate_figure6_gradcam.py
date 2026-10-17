@@ -338,7 +338,15 @@ def main() -> None:
     device = torch.device(
         args.device if torch.cuda.is_available() or args.device == "cpu" else "cpu"
     )
-    out_dir = args.output_dir
+    out_dir = args.output_dir.resolve()
+    repo = Path(__file__).resolve().parents[1]
+    if out_dir == repo or repo in out_dir.parents:
+        raise SystemExit(
+            "Refusing to write Figure 6 inside the repository. Case folders contain "
+            "DICOM identifiers. Pass --output-dir outside the repository. The trained "
+            "fold checkpoints are not in this release, so a redraw after retraining "
+            "will not match the published heatmaps."
+        )
     out_dir.mkdir(parents=True, exist_ok=True)
 
     models = ["resnet152", "rad_dino"]
