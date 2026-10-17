@@ -10,6 +10,16 @@ resample and scoring both runs on it (a paired bootstrap) cancels the shared
 sampling noise and yields a far tighter, correctly specified interval for the
 difference than comparing two independent marginal intervals would.
 
+Manuscript Table 4 and Figure 5 use this interval with 20,000 replicates.
+Their p-values are the clustered DeLong tests in clustered_delong_delta_auroc.py.
+The Monte Carlo p-value here is p = 2(b + 1) / (B + 1). A bootstrap-SE Wald
+test is stored as a sensitivity analysis. Holm adjustment is applied to the
+56 view x backbone x preprocessing-versus-raw contrasts.
+
+Table 6 and Supplementary Table S9 use 2,000 replicates. Pass --n-boot 2000
+for those control runs. The files under results/sensitivity/preprocessing_controls/
+are the manuscript estimates and should not be replaced by a 20,000-replicate run.
+
 Outputs
   1. per (view, backbone, mode_a -> mode_b) contrast
   2. mean contrast across backbones, using one shared subject resample per
@@ -27,7 +37,7 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
-from scipy.stats import rankdata
+from scipy.stats import norm, rankdata
 
 STUDY_DIR = Path(__file__).resolve().parents[1]
 RESULTS_DIR = Path(os.environ.get("RESULTS_DIR", STUDY_DIR / "results_pneumonia")).resolve()
@@ -153,11 +163,82 @@ def percentile_ci(samples: np.ndarray):
 
 
 def bootstrap_p_value(samples: np.ndarray) -> float:
-    """Two-sided bootstrap p-value for H0: delta = 0."""
+    """Two-sided tail proportion for H0: delta = 0, without the +1 correction.
+
+    Training-policy sensitivity still uses this proportion. The primary paired
+    contrasts use bootstrap_test, which matches the manuscript formula.
+    """
     n = samples.size
     p_le = float((samples <= 0).sum()) / n
     p_ge = float((samples >= 0).sum()) / n
     return float(min(1.0, 2.0 * min(p_le, p_ge)))
+
+
+def bootstrap_test(point: float, samples: np.ndarray) -> dict:
+    """Monte Carlo test of H0: delta = 0, plus a Wald sensitivity test.
+
+    The primary p-value is p = min(1, 2 (b + 1) / (B + 1)). b is the smaller
+    tail count, with exact zeros counted in both tails, and B is the number of
+    non-degenerate replicates. When b = 0, p equals 2 / (B + 1) and is an
+    upper bound. The Wald p-value uses the full-sample point estimate and the
+    bootstrap standard deviation.
+    """
+    b_le = int(np.count_nonzero(samples <= 0.0))
+    b_ge = int(np.count_nonzero(samples >= 0.0))
+    tail = min(b_le, b_ge)
+    n = int(samples.size)
+    if n == 0:
+        raise RuntimeError("bootstrap produced no non-degenerate replicates")
+    p = float(min(1.0, 2.0 * (tail + 1) / (n + 1)))
+    se = float(np.std(samples, ddof=1))
+    if not np.isfinite(se) or se == 0.0:
+        p_wald = float("nan")
+    else:
+        p_wald = float(min(1.0, 2.0 * norm.sf(abs(point) / se)))
+    return {
+        "p": p,
+        "tail": tail,
+        "upper_bound": tail == 0,
+        "se": se,
+        "p_wald": p_wald,
+    }
+
+
+def holm_adjust(pvals: np.ndarray) -> np.ndarray:
+    """Holm step-down adjusted p-values, capped at 1, in the input order."""
+    m = int(pvals.size)
+    order = np.argsort(pvals, kind="mergesort")
+    adjusted = np.empty(m, dtype=float)
+    running = 0.0
+    for rank, idx in enumerate(order):
+        val = min(1.0, (m - rank) * float(pvals[idx]))
+        running = max(running, val)
+        adjusted[idx] = running
+    return adjusted
+
+
+def apply_family_holm(rows: list[dict]) -> None:
+    """Holm adjustment for the 56 preprocessing-versus-raw contrasts."""
+    index = [
+        i for i, row in enumerate(rows)
+        if row["mode_a"] == BASELINE_MODE and row["pairing"] == "paired"
+    ]
+    for row in rows:
+        row["delta_auc_p_holm"] = ""
+        row["delta_auc_p_wald_holm"] = ""
+        row["delta_auprc_p_holm"] = ""
+        row["delta_auprc_p_wald_holm"] = ""
+    if not index:
+        return
+    for src, dst in (
+        ("delta_auc_p", "delta_auc_p_holm"),
+        ("delta_auc_p_wald", "delta_auc_p_wald_holm"),
+        ("delta_auprc_p", "delta_auprc_p_holm"),
+        ("delta_auprc_p_wald", "delta_auprc_p_wald_holm"),
+    ):
+        adjusted = holm_adjust(np.array([rows[i][src] for i in index], dtype=float))
+        for slot, idx in enumerate(index):
+            rows[idx][dst] = adjusted[slot]
 
 
 def paired_contrast(job) -> dict:
@@ -210,6 +291,10 @@ def paired_contrast(job) -> dict:
 
     auc_lo, auc_hi = percentile_ci(d_auc)
     ap_lo, ap_hi = percentile_ci(d_ap)
+    delta_auc = point["auc_b"] - point["auc_a"]
+    delta_ap = point["auprc_b"] - point["auprc_a"]
+    auc_test = bootstrap_test(delta_auc, d_auc)
+    ap_test = bootstrap_test(delta_ap, d_ap)
     return {
         "view": view,
         "model": model,
@@ -222,24 +307,33 @@ def paired_contrast(job) -> dict:
         "n_subjects_paired": n_subjects,
         "auc_a": point["auc_a"],
         "auc_b": point["auc_b"],
-        "delta_auc": point["auc_b"] - point["auc_a"],
+        "delta_auc": delta_auc,
         "delta_auc_lo": auc_lo,
         "delta_auc_hi": auc_hi,
         "delta_auc_ci_width": auc_hi - auc_lo,
         "delta_auc_excludes_zero": bool(auc_lo > 0 or auc_hi < 0),
-        "delta_auc_p": bootstrap_p_value(d_auc),
+        "delta_auc_p": auc_test["p"],
+        "delta_auc_tail": auc_test["tail"],
+        "delta_auc_p_upper_bound": auc_test["upper_bound"],
+        "delta_auc_se": auc_test["se"],
+        "delta_auc_p_wald": auc_test["p_wald"],
         "auprc_a": point["auprc_a"],
         "auprc_b": point["auprc_b"],
-        "delta_auprc": point["auprc_b"] - point["auprc_a"],
+        "delta_auprc": delta_ap,
         "delta_auprc_lo": ap_lo,
         "delta_auprc_hi": ap_hi,
         "delta_auprc_ci_width": ap_hi - ap_lo,
         "delta_auprc_excludes_zero": bool(ap_lo > 0 or ap_hi < 0),
-        "delta_auprc_p": bootstrap_p_value(d_ap),
+        "delta_auprc_p": ap_test["p"],
+        "delta_auprc_tail": ap_test["tail"],
+        "delta_auprc_p_upper_bound": ap_test["upper_bound"],
+        "delta_auprc_se": ap_test["se"],
+        "delta_auprc_p_wald": ap_test["p_wald"],
         "delta_auc_ci_width_unpaired": u_auc_hi - u_auc_lo,
         "delta_auprc_ci_width_unpaired": u_ap_hi - u_ap_lo,
         "pairing_width_reduction_auc": 1.0 - (auc_hi - auc_lo) / (u_auc_hi - u_auc_lo),
         "prob_corr_a_b": float(np.corrcoef(pa, pb)[0, 1]),
+        "n_boot": n_boot,
         "n_boot_effective": filled,
         "run_a": run_a,
         "run_b": run_b,
@@ -285,6 +379,8 @@ def pooled_contrast(job) -> dict:
 
     auc_lo, auc_hi = percentile_ci(d_auc)
     ap_lo, ap_hi = percentile_ci(d_ap)
+    auc_test = bootstrap_test(point, d_auc)
+    ap_test = bootstrap_test(point_ap, d_ap)
     return {
         "view": view,
         "mode_a": mode_a,
@@ -298,12 +394,21 @@ def pooled_contrast(job) -> dict:
         "mean_delta_auc_lo": auc_lo,
         "mean_delta_auc_hi": auc_hi,
         "mean_delta_auc_excludes_zero": bool(auc_lo > 0 or auc_hi < 0),
-        "mean_delta_auc_p": bootstrap_p_value(d_auc),
+        "mean_delta_auc_p": auc_test["p"],
+        "mean_delta_auc_tail": auc_test["tail"],
+        "mean_delta_auc_p_upper_bound": auc_test["upper_bound"],
+        "mean_delta_auc_se": auc_test["se"],
+        "mean_delta_auc_p_wald": auc_test["p_wald"],
         "mean_delta_auprc": point_ap,
         "mean_delta_auprc_lo": ap_lo,
         "mean_delta_auprc_hi": ap_hi,
         "mean_delta_auprc_excludes_zero": bool(ap_lo > 0 or ap_hi < 0),
-        "mean_delta_auprc_p": bootstrap_p_value(d_ap),
+        "mean_delta_auprc_p": ap_test["p"],
+        "mean_delta_auprc_tail": ap_test["tail"],
+        "mean_delta_auprc_p_upper_bound": ap_test["upper_bound"],
+        "mean_delta_auprc_se": ap_test["se"],
+        "mean_delta_auprc_p_wald": ap_test["p_wald"],
+        "n_boot": n_boot,
         "n_boot_effective": filled,
     }
 
@@ -374,6 +479,7 @@ def build_pooled_jobs(runs, models, n_boot, seed):
 
 
 def write_csv(path: Path, rows):
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
@@ -386,7 +492,12 @@ def main():
     parser.add_argument("--results-root", type=Path, default=RESULTS_ROOT)
     parser.add_argument("--runs-file", type=Path, default=None, help="Optional one-run-per-line manifest")
     parser.add_argument("--min-run-date", default=MIN_RUN_DATE)
-    parser.add_argument("--n-boot", type=int, default=2000)
+    parser.add_argument(
+        "--n-boot",
+        type=int,
+        default=20000,
+        help="Replicates. Manuscript Table 4 and Figure 5 use 20000; Table 6 and S9 use 2000.",
+    )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--out-pairs", type=Path, default=RESULTS_ROOT / "aggregates" / "_delta_paired_bootstrap_by_backbone.csv")
@@ -407,6 +518,7 @@ def main():
 
     pair_rows.sort(key=lambda r: (r["view"], r["mode_a"], r["mode_b"], r["model"]))
     pooled_rows.sort(key=lambda r: (r["view"], r["mode_a"], r["mode_b"]))
+    apply_family_holm(pair_rows)
     write_csv(args.out_pairs, pair_rows)
     write_csv(args.out_pooled, pooled_rows)
 
