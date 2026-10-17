@@ -18,13 +18,30 @@ Trained checkpoints are not in this directory. See `checkpoints/README.md`.
 | `primary/aggregate_metrics_full.csv` | Same runs, with the executed hyperparameters |
 | `primary/configuration_and_metrics.csv` | Configuration record plus metrics for every canonical run |
 | `primary/bootstrap_summary.csv` | Subject-level cluster bootstrap versus image bootstrap |
-| `primary/paired_delta_by_backbone.csv` | Paired preprocessing-minus-raw differences by backbone |
-| `primary/paired_delta_pooled.csv` | Same contrasts pooled across backbones |
+| `primary/paired_delta_by_backbone.csv` | Paired differences by backbone. Table 4 and Figure 5 intervals use 20,000 subject-level replicates |
+| `primary/paired_delta_pooled.csv` | Same contrasts pooled across backbones, also 20,000 replicates |
+| `primary/Table_4_delta_auroc_vs_raw.md` | Manuscript Table 4. Intervals are the 20,000-replicate percentile intervals; p-values are clustered DeLong |
 | `primary/canonical_70runs.txt` | Run-folder names of the 70 configurations |
-| `sensitivity/` | Preprocessing-control, training-seed, uncertainty-endpoint, and training-policy summaries |
+| `primary/Table_S1_fold_level_validation_performance.csv` | Supplementary Table S1, five validation folds |
+| `primary/Table_S4_input_geometry_characteristics.csv` | Supplementary Table S4 |
+| `primary/Table_S5_operating_point_and_calibration.csv` | Supplementary Table S5, 2,000-replicate operating-point intervals |
+| `primary/Table_S11_clustered_delong_delta_auroc.md` | Supplementary Table S11, clustered DeLong standard errors and test statistics for ΔAUROC versus raw |
+| `primary/Table_S11_clustered_delong_delta_auroc.csv` | Numeric source for Table S11 |
+| `supplement/Table_S7_lung_field_attribution_concentration.csv` | Table S7, lung-field attribution, 2,000-replicate intervals |
+| `supplement/Table_S8_uncertainty_endpoint_sensitivity.md` | Table S8, CheXpert uncertain-label endpoint. Source CSVs are in `sensitivity/uncertainty_endpoint/` |
+| `figures/` | Figure 5 and Supplementary Figure S1, drawn from the released tables |
+| `supplement/` | Identifier-free Supplementary Tables S2, S3, S6, S7, and S8 |
+| `sensitivity/preprocessing_controls/Table_6_preprocessing_controls.md` | Table 6, formatted from the 2,000-replicate control file |
+| `sensitivity/seed_robustness/Table_7_training_seed_robustness.md` | Table 7, formatted from the two-backbone seed summary |
+| `sensitivity/` | Preprocessing-control, training-seed, uncertainty-endpoint, and training-policy summaries. Controls remain the manuscript 2,000-replicate estimates |
 
-Numbered supplementary tables and figures are not stored here. The scripts
-that build them are listed in the repository README.
+Marginal AUROC and AUPRC intervals in `aggregate_metrics.csv` and
+`bootstrap_summary.csv` remain the 2,000-replicate subject-level intervals.
+The delta rows in `configuration_and_metrics.csv` use the same 20,000-replicate
+intervals as `paired_delta_by_backbone.csv`. On the 56 preprocessing-versus-raw
+rows, `table4_unadjusted_p` and `table4_holm_p` are the clustered DeLong
+p-values printed in `Table_4_delta_auroc_vs_raw.md`. `delta_auc_p` remains the
+paired cluster-bootstrap p-value and is not the p-value in Table 4.
 
 Tables that list individual radiographs (expert-reference rows, Grad-CAM case
 identifiers, and the split assignment files) are not redistributed here.

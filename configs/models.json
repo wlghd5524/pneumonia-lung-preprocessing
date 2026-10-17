@@ -70,7 +70,11 @@
     "lora_checkpoint": {
       "expected_path": "checkpoints/best_lora_weights.pt",
       "sha256": "499e638bb7c51dbe0dcc3bfb9dbfada74fc2d725e953fbb5bdb2dd1b72106f91",
-      "config": "configs/medsam3_full_lora_config.yaml"
+      "source": "Upstream public MedSAM3-v1 LoRA release, used unmodified. Not trained or fine-tuned in this study.",
+      "huggingface_repository": "lal-Joey/MedSAM3_v1",
+      "huggingface_file": "best_lora_weights.pt",
+      "huggingface_revision": "f579e37e4db9f2c7e85a133b7970d59907e36fec",
+      "config": "configs/medsam3_full_lora_config.yaml (copy of the upstream training config with local paths changed; used only to build the model at inference)"
     }
   },
   "fine_tuned_classification_checkpoints": {

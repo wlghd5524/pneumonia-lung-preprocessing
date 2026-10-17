@@ -1,3 +1,9 @@
+# NOTE: This is the upstream MedSAM3 full_lora_config.yaml (Joey-S-Liu/MedSAM3,
+# commit f79eef3) with only data_dir and output_dir changed. The LoRA weights
+# in checkpoints/best_lora_weights.pt are the upstream MedSAM3-v1 release
+# (huggingface.co/lal-Joey/MedSAM3_v1). They were NOT trained in this study,
+# so the `training:` and `output:` sections below do not describe our runs.
+# The `model:` and `lora:` sections are what the inference code reads.
 # SAM3 LoRA Training Configuration
 # Full LoRA configuration - applies LoRA to ALL transformer components
 # Use this for maximum adaptation capacity (more trainable parameters)
