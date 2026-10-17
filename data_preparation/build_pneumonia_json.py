@@ -148,9 +148,9 @@ def load_split_df(split_csv: Optional[Path]) -> Optional[pd.DataFrame]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="CheXpert Pneumonia AP/PA 0/1 라벨 JSON 생성")
     parser.add_argument("--mimic-root", type=str, default=str(DEFAULT_MIMIC_ROOT))
-    parser.add_argument("--chexpert-csv", type=str, default=str(DEFAULT_CHEXPERT))
-    parser.add_argument("--metadata-csv", type=str, default=str(DEFAULT_METADATA))
-    parser.add_argument("--split-csv", type=str, default=str(DEFAULT_SPLIT))
+    parser.add_argument("--chexpert-csv", type=str, default=None, help=f"기본: <mimic-root>/{DEFAULT_CHEXPERT.name}")
+    parser.add_argument("--metadata-csv", type=str, default=None, help=f"기본: <mimic-root>/{DEFAULT_METADATA.name}")
+    parser.add_argument("--split-csv", type=str, default=None, help=f"기본: <mimic-root>/{DEFAULT_SPLIT.name}")
     parser.add_argument("--no-split", action="store_true", help="split.csv 조인을 생략합니다.")
     parser.add_argument(
         "--drop-na",
@@ -167,9 +167,9 @@ def main() -> None:
     args = parser.parse_args()
 
     mimic_root = Path(args.mimic_root).resolve()
-    chexpert_csv = Path(args.chexpert_csv).resolve()
-    metadata_csv = Path(args.metadata_csv).resolve()
-    split_csv = None if args.no_split else Path(args.split_csv).resolve()
+    chexpert_csv = Path(args.chexpert_csv or mimic_root / DEFAULT_CHEXPERT.name).resolve()
+    metadata_csv = Path(args.metadata_csv or mimic_root / DEFAULT_METADATA.name).resolve()
+    split_csv = None if args.no_split else Path(args.split_csv or mimic_root / DEFAULT_SPLIT.name).resolve()
     out_json = Path(args.out_json).resolve()
     out_study_json = Path(args.out_study_json).resolve() if str(args.out_study_json).strip() else None
 
