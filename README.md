@@ -311,12 +311,13 @@ predictions of the 70 primary runs (no retraining) and compared with the files i
 | Table S5, operating points | 34 numeric columns equal within 1e-9 |
 | Table S1 | Means and population SDs equal within 1e-15 |
 | Table S4 | Table rows identical (the released Markdown adds one explanatory paragraph) |
+| Table S2 Panels A and B and Table 3, PA 200 images | Rebuilt with `cxr-segmentation-validation/pa200_reference.py` from the public reference contours. Dice and IoU equal the manuscript at three decimals for both methods, and CheXMask HD95 is identical. MedSAM3 HD95 differs by at most 0.2 px because its GPU output changes by a few dozen pixels between runs |
 | Patient partition | PA and AP CSVs regenerated with the builder match the SHA256 values in `splits/README.md` (Section 5) |
 
 Table 6, Table 7, and Table S8 were checked for agreement with their CSV sources
-and with Table 4, not recomputed from predictions. Table S2 needs the expert
-masks, and Table S7 and Figure 6 need the fold checkpoints, so those are not
-reproducible from this release. Table S3, the controls (Table S9), and the seed
+and with Table 4, not recomputed from predictions. The AP part of Table S2 needs
+the expert masks, which are not distributed, and Table S7 and Figure 6 need the
+fold checkpoints, so those are not reproducible from this release. Table S3, the controls (Table S9), and the seed
 runs (Table S10) were not rerun.
 
 ### Which script builds which table or figure
@@ -329,7 +330,7 @@ runs (Table S10) were not rerun.
 | Table S5, operating point and calibration | `results/primary/Table_S5_operating_point_and_calibration.csv` (2,000 replicates). Rebuild with `evaluation/analyze_crossfit_operating_point.py` |
 | Table S9 and Table 6, preprocessing controls | `results/sensitivity/preprocessing_controls/` (2,000 replicates). Format Table 6 with `evaluation/format_table6_preprocessing_controls.py` |
 | Table S10 and Table 7, training seeds | `results/sensitivity/seed_robustness/`. Format Table 7 with `evaluation/format_table7_training_seed.py` |
-| Table S2, expert-reference summaries | `results/supplement/Table_S2_ap_expert_reference_summary.json` and `results/supplement/Table_S2_expert_reference_lung_segmentation_summary.json`. Metric code is `cxr-segmentation-validation/evaluate_segmentation.py` |
+| Table S2, expert-reference summaries | PA, 200 public reference contours: `results/supplement/Table_S2_pa200_expert_reference_summary.json`, recomputed with `cxr-segmentation-validation/pa200_reference.py` (Table 3 reports the same 200-image numbers). AP, 100 contours: `results/supplement/Table_S2_ap_expert_reference_summary.json`. Metric code is `cxr-segmentation-validation/evaluate_segmentation.py` |
 | Table S3, mask failure and agreement | `results/supplement/Table_S3_segmentation_agreement_fallback_classification_error.csv`. Rebuild with `mask_analysis/summarize_mask_source_failure_table.py` and `mask_analysis/analyze_segmentation_quality_proxies.py` |
 | Table S6, model and software record | `results/supplement/Table_S6_model_checkpoint_software.md`, rebuilt by `tools/export_table_s6.py` |
 | Supplementary Figure S1, calibration curves | `figures/plot_figure_s1_calibration.py` using `results/figures/Supplementary_Figure_S1_calibration_bins.csv` |

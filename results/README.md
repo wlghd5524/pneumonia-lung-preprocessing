@@ -27,6 +27,7 @@ Trained checkpoints are not in this directory. See `checkpoints/README.md`.
 | `primary/Table_S5_operating_point_and_calibration.csv` | Supplementary Table S5, 2,000-replicate operating-point intervals |
 | `primary/Table_S11_clustered_delong_delta_auroc.md` | Supplementary Table S11, clustered DeLong standard errors and test statistics for ΔAUROC versus raw |
 | `primary/Table_S11_clustered_delong_delta_auroc.csv` | Numeric source for Table S11 |
+| `supplement/Table_S2_pa200_expert_reference_summary.json` | Table S2 Panels A and B and Table 3, PA expert-reference scores for the 200 public contours (all, overlap with the study cohort, outside it). Counts and summary statistics only |
 | `supplement/Table_S7_lung_field_attribution_concentration.csv` | Table S7, lung-field attribution, 2,000-replicate intervals |
 | `supplement/Table_S8_uncertainty_endpoint_sensitivity.md` | Table S8, CheXpert uncertain-label endpoint. Source CSVs are in `sensitivity/uncertainty_endpoint/` |
 | `figures/` | Figure 5 and Supplementary Figure S1, drawn from the released tables |

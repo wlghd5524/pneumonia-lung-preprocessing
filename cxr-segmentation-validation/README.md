@@ -8,6 +8,7 @@ This directory records how the 100 AP expert lung contours were drawn and how Di
 | `evaluation_protocol.md` | Sample rules and the metric definitions used for the reported scores |
 | `evaluate_segmentation.py` | Those metric definitions, plus a synthetic self-check |
 | `sample_expert_reference.py` | Redraw of the 100-image sample from a local MIMIC-CXR-JPG tree |
+| `pa200_reference.py` | Scores MedSAM3 and CheXMask on the 200 public PA expert contours (Table 3 and Table S2, Panels A and B) |
 | `requirements.txt` | Packages used by the two scripts |
 
 The metric packages match the pins in the repository `requirements.txt`.
@@ -36,6 +37,30 @@ The summary counts pairs, unmatched files, resized pairs, and empty masks. It th
 `--per-image-csv` writes one row per paired stem. When the stem is a DICOM identifier, keep that CSV outside this repository and do not commit it.
 
 Run the command once for MedSAM3 and once for CheXMask. Each comparison uses the expert mask as the reference.
+
+## Score the 200 public PA reference contours
+
+The dataset *Heart and lung segmentations for MIMIC-CXR, MIMIC-CXR-JPG, and Montgomery County TB databases* on PhysioNet has expert lung contours for 200 PA radiographs. Part of the set is in the study cohort and the rest is not, so the masks of the rest are built here with the primary pipeline. Everything below runs outside this repository, and the dataset (its license file is ODC-By), MIMIC-CXR-JPG, and the CheXMask table must be downloaded under their own terms.
+
+```bash
+python cxr-segmentation-validation/pa200_reference.py prepare \
+  --gold-root /path/to/heart-and-lung-segmentations.../mimic_masks \
+  --mimic-root /path/to/mimic-cxr-jpg/2.1.0 \
+  --out-dir /path/outside/this/repo/pa200
+```
+
+`prepare` copies the expert masks to `<out-dir>/reference/` named by DICOM identifier and writes `pa200_records.json`. It prints the two `preprocessing/build_cxr_lung_seg_dataset.py` commands to run next: one with `--seg-mode medsam3` and one with `--seg-mode chexmask`, both with `--labels-json <out-dir>/pa200_records.json`. These are the settings of the primary analysis. Then:
+
+```bash
+python cxr-segmentation-validation/pa200_reference.py summarize \
+  --reference-dir /path/outside/this/repo/pa200/reference \
+  --medsam3-root /path/outside/this/repo/pa200/medsam3 \
+  --chexmask-root /path/outside/this/repo/pa200/chexmask \
+  --cohort-json /path/to/pneumonia_labels.json \
+  --summary-json /path/to/summary.json
+```
+
+The summary has counts, mean, SD, median, and quartiles for all 200 images, for the images that are in the study cohort, for those outside it, and for the cohort images by pneumonia label. It has no identifiers. It uses `evaluate_segmentation.py` for Dice, IoU, and HD95, so the definitions match the AP scores. The result is `results/supplement/Table_S2_pa200_expert_reference_summary.json`. MedSAM3 HD95 can differ by about 0.1 px between runs on a GPU, while Dice and IoU do not change at three decimals.
 
 ## Redraw the 100-image sample
 
