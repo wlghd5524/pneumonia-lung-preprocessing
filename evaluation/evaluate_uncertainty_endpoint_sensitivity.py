@@ -46,6 +46,8 @@ RESULTS_DIR = Path(os.environ.get("RESULTS_DIR", STUDY_DIR / "results_pneumonia"
 RESULTS_ROOT = RESULTS_DIR
 OUT_DIR = RESULTS_ROOT / "analysis_outputs" / "uncertainty_endpoint_sensitivity"
 CANONICAL_RUNS = RESULTS_ROOT / "aggregates" / "_canonical_70runs.txt"
+if not CANONICAL_RUNS.is_file():  # fresh checkout: use the run list released with the repository
+    CANONICAL_RUNS = Path(__file__).resolve().parents[1] / "results" / "primary" / "canonical_70runs.txt"
 LABELS_JSON = DATA_BASE_DIR / "pneumonia_labels_uncertain_outer_test.json"
 N_BOOT = 2000
 BOOT_SEED = 42

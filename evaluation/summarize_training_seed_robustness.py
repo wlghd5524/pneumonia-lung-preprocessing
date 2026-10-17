@@ -89,9 +89,12 @@ def prediction_id(path: Path) -> str:
 def collect() -> pd.DataFrame:
     rows = []
     root42 = RESULTS_DIR
+    canon_path = root42 / "aggregates" / "_canonical_70runs.txt"
+    if not canon_path.is_file():  # fresh checkout: use the run list released with the repository
+        canon_path = Path(__file__).resolve().parents[1] / "results" / "primary" / "canonical_70runs.txt"
     canon = [
         line.strip()
-        for line in (root42 / "aggregates" / "_canonical_70runs.txt").read_text().splitlines()
+        for line in canon_path.read_text().splitlines()
         if line.strip()
     ]
     allowed_arch = set(ARCHS)

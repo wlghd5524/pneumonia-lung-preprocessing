@@ -283,6 +283,7 @@ def main() -> None:
         "Soft mask uses a Gaussian blur with radius 2% of the shorter image side.",
         "",
     ]
+    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     OUT_JSON.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     OUT_MD.write_text("\n".join(lines), encoding="utf-8")
     print(f"saved {OUT_MD}")
@@ -291,6 +292,7 @@ def main() -> None:
 
 
 def write_methods() -> None:
+    OUT_METHODS.parent.mkdir(parents=True, exist_ok=True)
     OUT_METHODS.write_text(
         """# Crop vs mask, geometry controls, and causal wording
 

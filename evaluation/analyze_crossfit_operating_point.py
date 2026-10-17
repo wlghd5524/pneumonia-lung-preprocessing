@@ -30,6 +30,8 @@ STUDY_DIR = Path(__file__).resolve().parents[1]
 RESULTS_DIR = Path(os.environ.get("RESULTS_DIR", STUDY_DIR / "results_pneumonia")).resolve()
 RESULTS = RESULTS_DIR
 CANON = RESULTS / "aggregates" / "_canonical_70runs.txt"
+if not CANON.is_file():  # fresh checkout: use the run list released with the repository
+    CANON = Path(__file__).resolve().parents[1] / "results" / "primary" / "canonical_70runs.txt"
 PRED_CSV = RESULTS / "aggregates" / "_outer_test_predictions_with_subject.csv"
 OUT_MD = RESULTS / "paper_tables" / "Supplementary_Table_S5_crossfit_operating_point.md"
 OUT_CSV = RESULTS / "paper_tables" / "Supplementary_Table_S5_crossfit_operating_point.csv"
@@ -462,6 +464,7 @@ def main() -> None:
         "n_boot_effective",
         "n_degenerate",
     ]
+    OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
     with OUT_CSV.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         w.writeheader()

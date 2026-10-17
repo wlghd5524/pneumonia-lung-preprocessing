@@ -215,6 +215,7 @@ def main():
     print(f"found {len(run_dirs)} runs", flush=True)
     loaded = [load_run(d, args.results_root) for d in run_dirs]
 
+    args.predictions_csv.parent.mkdir(parents=True, exist_ok=True)
     with args.predictions_csv.open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["run", "model", "view", "mode", "subject_id", "label", "prob_ensemble"])
@@ -238,6 +239,7 @@ def main():
             )
 
     results.sort(key=lambda r: r["run"])
+    args.out_csv.parent.mkdir(parents=True, exist_ok=True)
     with args.out_csv.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(results[0].keys()))
         writer.writeheader()

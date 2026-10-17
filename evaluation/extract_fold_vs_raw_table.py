@@ -2,6 +2,7 @@
 """Fold-level AUROC/AUPRC mean±SD and paired Δ vs raw (5 CV folds)."""
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import math
@@ -11,8 +12,12 @@ from pathlib import Path
 
 ROOT = Path(os.environ.get("RESULTS_DIR", Path(__file__).resolve().parents[1] / "results_pneumonia")).resolve()
 CANON = ROOT / "aggregates" / "_canonical_70runs.txt"
+if not CANON.is_file():  # fresh checkout: use the run list released with the repository
+    CANON = Path(__file__).resolve().parents[1] / "results" / "primary" / "canonical_70runs.txt"
 OUT_MD = ROOT / "paper_tables" / "Supplementary_Table_fold_auroc_auprc_vs_raw.md"
 OUT_CSV = ROOT / "paper_tables" / "Supplementary_Table_fold_auroc_auprc_vs_raw.csv"
+# Same layout as results/primary/Table_S1_fold_level_validation_performance.csv.
+OUT_FOLD_CSV = ROOT / "paper_tables" / "Table_S1_fold_level_validation_performance.csv"
 
 RUN_RE = re.compile(
     r"_(AP|PA)_(raw|medsam3_seg|medsam3_crop|chexmask_seg|chexmask_crop)_cv_5fold"
@@ -92,6 +97,8 @@ def load_run(run: str) -> dict:
 
 
 def main() -> None:
+    argparse.ArgumentParser(description=__doc__).parse_args()
+    OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
     runs = [ln.strip() for ln in CANON.read_text().splitlines() if ln.strip()]
     if len(runs) != 70:
         raise SystemExit(f"Expected 70 canonical runs, got {len(runs)}")
@@ -102,6 +109,7 @@ def main() -> None:
         raise SystemExit(f"Duplicate view/arch/mode keys: {len(by_key)}")
 
     rows = []
+    fold_rows = []
     for view in VIEW_ORDER:
         for arch in ARCH_ORDER:
             raw = by_key[(view, arch, "raw")]
@@ -134,6 +142,32 @@ def main() -> None:
                         "raw_run": raw["run"],
                     }
                 )
+                fold_row = {
+                    "view": view,
+                    "backbone": ARCH_LABEL[arch],
+                    "preprocessing": MODE_LABEL[mode],
+                    "arch": arch,
+                    "mode": mode,
+                    "run": rec["run"],
+                }
+                for i in range(5):
+                    fold_row[f"fold_{i + 1}_auroc"] = rec["auc"][i]
+                    fold_row[f"fold_{i + 1}_auprc"] = rec["auprc"][i]
+                    fold_row[f"fold_{i + 1}_delta_auroc_vs_raw"] = d_auc[i]
+                    fold_row[f"fold_{i + 1}_delta_auprc_vs_raw"] = d_prc[i]
+                fold_row.update(
+                    {
+                        "auroc_mean": auc_mu,
+                        "auroc_sd_population": auc_sd,
+                        "auprc_mean": prc_mu,
+                        "auprc_sd_population": prc_sd,
+                        "delta_auroc_mean_vs_raw": da_mu,
+                        "delta_auroc_sd_population": da_sd,
+                        "delta_auprc_mean_vs_raw": dp_mu,
+                        "delta_auprc_sd_population": dp_sd,
+                    }
+                )
+                fold_rows.append(fold_row)
 
     with OUT_CSV.open("w", newline="") as f:
         w = csv.DictWriter(
@@ -197,6 +231,19 @@ def main() -> None:
         )
     lines.append("")
     OUT_MD.write_text("\n".join(lines))
+    # Released order: view, then preprocessing condition, then backbone.
+    fold_rows.sort(
+        key=lambda r: (
+            VIEW_ORDER.index(r["view"]),
+            MODE_ORDER.index(r["mode"]),
+            ARCH_ORDER.index(r["arch"]),
+        )
+    )
+    with OUT_FOLD_CSV.open("w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(fold_rows[0].keys()), lineterminator="\n")
+        w.writeheader()
+        w.writerows(fold_rows)
+    print(f"Wrote {len(fold_rows)} rows -> {OUT_FOLD_CSV}")
     print(f"Wrote {len(rows)} rows -> {OUT_MD}")
     print(f"Wrote {len(rows)} rows -> {OUT_CSV}")
 
