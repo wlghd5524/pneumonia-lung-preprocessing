@@ -309,10 +309,6 @@ Suggested Methods sentence:
 
 Every trained model receives a 512×512 bilinear resize. We therefore measured, on the full 41,503-image cohort and separately for AP and PA, how raw, cropped, and masked inputs change field of view and effective lung scale: crop area / original area, pre-crop and crop aspect ratio, lung pixels / 512², lung-area magnification relative to raw, and the zero-pixel fraction of hard-masked 512×512 inputs. The same quantities were computed for three untrained controls: a segmentation-independent matched center crop of the same rectangle size, uniform 0%/10%/20% margin crops, and a Gaussian-blurred soft mask.
 
-Suggested reviewer sentence:
-
-> We added quantitative controls to characterize how the transformations changed the input geometry, although additional classifier retraining for these controls was outside the scope of the revision. Retraining a new model for each extra transform would not be comparable to simply feeding a new input into one of the existing 70 trained configurations.
-
 ## Causal wording
 
 The experiments show that cropping keeps continuous image texture while narrowing the field of view, whereas hard masking introduces a zero-valued background and sharp mask boundaries. They do not isolate which of those factors produced the AUROC change.

@@ -1,6 +1,6 @@
 # Context-Dependent Effects of Lung Segmentation Preprocessing on Radiology-Report-Derived Pneumonia Classification in Chest Radiographs: A Comparative Study Across Acquisition Settings and Backbone Architectures
 
-Reproducibility package for the revised manuscript.
+Reproducibility package for the manuscript.
 
 | Item | Value |
 | --- | --- |
