@@ -4,7 +4,7 @@ Reproducibility package for the manuscript.
 
 | Item | Value |
 | --- | --- |
-| Release tag | `v1.2` (snapshot corresponding to the manuscript) |
+| Release tag | `v1.1` (snapshot corresponding to the manuscript) |
 | DOI | None. This release is identified by its Git tag and commit. |
 | Python | 3.12 (reference run: 3.12.3) |
 | Reference environment | `configs/reference_environment.json` and `requirements.txt` |
@@ -20,7 +20,7 @@ saved predictions; it cannot repeat the training.
 | --- | --- |
 | Training, preprocessing, and evaluation code | Yes |
 | One JSON config per executed experiment (146 files) | Yes, under `configs/` |
-| Aggregate metrics and identifier-free manuscript tables | Yes, under `results/`. Table 4 uses the 20,000-replicate paired intervals. Tables S1, S4, S5, S7, S8, and S11 are stored there. Per-image tables are not. |
+| Aggregate metrics and identifier-free manuscript tables | Yes, under `results/`: Tables 3 to 7 and Supplementary Tables S1 to S11. Table 4 uses the 20,000-replicate paired intervals. Per-image tables are not. |
 | Exact patient-partition CSV files | No. They hold MIMIC identifiers. The builder and SHA256 checksums are in `splits/` and `training/`; credentialed users generate the CSVs locally and verify them (Section 5). |
 | Image-level or patient-level prediction files | No. They contain MIMIC-CXR identifiers. Credentialed users can regenerate them. |
 | Expert lung masks and per-image expert tables | No. The annotation procedure and Dice, IoU, and HD95 code are in `cxr-segmentation-validation/`. |
@@ -108,8 +108,18 @@ python data_preparation/build_pneumonia_json.py \
   --out-json "$DATA_BASE_DIR/pneumonia_labels.json"
 ```
 
-Released counts after the AP exclusion below: AP 22,894 images from 11,951
-subjects; PA 18,609 images from 12,385 subjects.
+Cohort flow (manuscript Figure 2). MIMIC-CXR-JPG metadata contained 377,110
+image records, of which 243,334 AP/PA image records remained after excluding
+non-frontal views. The CheXpert label table contained 227,827 study records. Of
+these, 18,291 studies had an uncertain Pneumonia label (−1) and 168,642 had a
+missing Pneumonia label; these 186,933 studies were excluded. The remaining
+40,894 studies with explicit Pneumonia labels of 0 or 1 were linked to AP/PA
+image metadata, and records without an accessible JPG file were excluded.
+Metadata linkage and image file verification yielded a final cohort of 41,503
+radiographs from 21,612 patients, comprising 17,207 report-derived
+Pneumonia-positive and 24,296 report-derived Pneumonia-negative images: AP
+22,894 images from 11,951 subjects and PA 18,609 images from 12,385 subjects
+(after the AP exclusion below).
 
 ## 4. Preprocessing
 
@@ -306,16 +316,23 @@ predictions of the 70 primary runs (no retraining) and compared with the files i
 | Item | Result |
 | --- | --- |
 | Paired cluster bootstrap, 20,000 replicates, seed 42 (140 per-backbone and 20 pooled contrasts) | Every numeric column equal to the released CSV within 1e-12 |
-| Clustered DeLong (Table S11) | Numeric columns equal within 1e-12. The regenerated `Table_4_delta_auroc_vs_raw.md` and `Table_S11_clustered_delong_delta_auroc.md` are byte-identical |
+| Clustered DeLong (Table 4 p-values) | Numeric columns equal within 1e-12. The regenerated `Table_4_delta_auroc_vs_raw.md` is byte-identical |
 | Marginal cluster bootstrap, 2,000 replicates (`aggregate_metrics.csv`, `bootstrap_summary.csv`) | Equal within 1e-9 |
 | Table S5, operating points | 34 numeric columns equal within 1e-9 |
 | Table S1 | Means and population SDs equal within 1e-15 |
-| Table S4 | Table rows identical (the released Markdown adds one explanatory paragraph) |
-| Table S2 Panels A and B and Table 3, PA 200 images | Rebuilt with `cxr-segmentation-validation/pa200_reference.py` from the public reference contours. Dice and IoU equal the manuscript at three decimals for both methods, and CheXMask HD95 is identical. MedSAM3 HD95 differs by at most 0.2 px because its GPU output changes by a few dozen pixels between runs |
+| Table S4 | Table rows identical |
+| Table S2 Panels A and B and Table 3, PA 200 images | Rebuilt with `cxr-segmentation-validation/pa200_reference.py` from the public reference contours, with the primary-pipeline masks for the 46 cohort images as in the manuscript. Every Dice, IoU, and CheXMask value and every 46-image MedSAM3 value equals the manuscript. The MedSAM3 masks of the other 154 images were rebuilt, and MedSAM3 GPU output changes by a few dozen pixels between runs, so two HD95 cells differ by 0.1 px: 68.2 (manuscript 68.3) for the 154-image mean and 120.6 (manuscript 120.7) for the 200-image SD |
 | Patient partition | PA and AP CSVs regenerated with the builder match the SHA256 values in `splits/README.md` (Section 5) |
 
 Table 6, Table 7, and Table S8 were checked for agreement with their CSV sources
-and with Table 4, not recomputed from predictions. The AP part of Table S2 needs
+and with Table 4, not recomputed from predictions.
+
+The released tables were also compared cell by cell with the manuscript and its
+supplementary Excel files: Tables 3 to 7, Table S2 to S5, Table S7, and every
+numeric cell of Tables S1, S5, S8, S9, S10, and S11 agree, apart from the two
+PA HD95 cells above. Table 5 has no separate source file; it is formatted from
+`aggregate_metrics.csv` with the rounding stated in
+`evaluation/format_table5_preprocessing_means.py`. The AP part of Table S2 needs
 the expert masks, which are not distributed, and Table S7 and Figure 6 need the
 fold checkpoints, so those are not reproducible from this release. Table S3, the controls (Table S9), and the seed
 runs (Table S10) were not rerun.
@@ -324,20 +341,22 @@ runs (Table S10) were not rerun.
 
 | Reported item | Where the manuscript numbers are |
 | --- | --- |
-| Table 4 and Figure 5, paired ΔAUROC | `results/primary/Table_4_delta_auroc_vs_raw.md`. Intervals in `paired_delta_by_backbone.csv` are 20,000 replicates. Draw the figure with `figures/plot_figure5_delta_auroc.py`. The p-values printed in Table 4 are `table4_unadjusted_p` and `table4_holm_p` on the 56 versus-raw rows, from `evaluation/clustered_delong_delta_auroc.py`. The four `table4_*` columns (`table4_unadjusted_p`, `table4_holm_p`, `table4_se`, `table4_z`) are copies of `delta_auc_p`, `delta_auc_p_holm`, `delta_auc_se`, and `delta_auc_z` from `Table_S11_clustered_delong_delta_auroc.csv` for those 56 rows and are empty for the other rows. No script writes them. They are the same in `paired_delta_by_backbone.csv` and in the delta rows of `configuration_and_metrics.csv` |
+| Table 3, expert-reference segmentation | `results/supplement/Table_3_expert_reference_lung_segmentation.md`, from the two Table S2 summary JSON files |
+| Table 4 and Figure 5, paired ΔAUROC | `results/primary/Table_4_delta_auroc_vs_raw.md`. Intervals in `paired_delta_by_backbone.csv` are 20,000 replicates. Draw the figure with `figures/plot_figure5_delta_auroc.py`. The p-values printed in Table 4 are `table4_unadjusted_p` and `table4_holm_p` on the 56 versus-raw rows, from `evaluation/clustered_delong_delta_auroc.py`. The four `table4_*` columns (`table4_unadjusted_p`, `table4_holm_p`, `table4_se`, `table4_z`) are copies of `delta_auc_p`, `delta_auc_p_holm`, `delta_auc_se`, and `delta_auc_z` from `Table_4_clustered_delong_source.csv` for those 56 rows and are empty for the other rows. No script writes them. They are the same in `paired_delta_by_backbone.csv` and in the delta rows of `configuration_and_metrics.csv` |
+| Table 5, backbone means by preprocessing | `results/primary/Table_5_mean_by_preprocessing.md`. Format with `evaluation/format_table5_preprocessing_means.py` |
 | Table S1, fold-level AUROC/AUPRC | `results/primary/Table_S1_fold_level_validation_performance.csv`. Rebuild with `evaluation/extract_fold_vs_raw_table.py`, which writes `paper_tables/Table_S1_fold_level_validation_performance.csv` in this layout. Values agree with the released file to 1e-15 (last-digit floating-point differences in the standard deviations) |
 | Table S4, input geometry | `results/primary/Table_S4_input_geometry_characteristics.csv`. Rebuild with `mask_analysis/analyze_input_geometry.py` |
 | Table S5, operating point and calibration | `results/primary/Table_S5_operating_point_and_calibration.csv` (2,000 replicates). Rebuild with `evaluation/analyze_crossfit_operating_point.py` |
-| Table S9 and Table 6, preprocessing controls | `results/sensitivity/preprocessing_controls/` (2,000 replicates). Format Table 6 with `evaluation/format_table6_preprocessing_controls.py` |
-| Table S10 and Table 7, training seeds | `results/sensitivity/seed_robustness/`. Format Table 7 with `evaluation/format_table7_training_seed.py` |
+| Table S9 and Table 6, preprocessing controls | `results/sensitivity/preprocessing_controls/` (2,000 replicates). Format Table 6 with `evaluation/format_table6_preprocessing_controls.py` and Table S9 with `evaluation/format_table_s9_preprocessing_controls.py` |
+| Table S10 and Table 7, training seeds | `results/sensitivity/seed_robustness/`. Format Table 7 with `evaluation/format_table7_training_seed.py` and Table S10 with `evaluation/format_table_s10_training_seed.py` |
 | Table S2, expert-reference summaries | PA, 200 public reference contours: `results/supplement/Table_S2_pa200_expert_reference_summary.json`, recomputed with `cxr-segmentation-validation/pa200_reference.py` (Table 3 reports the same 200-image numbers). AP, 100 contours: `results/supplement/Table_S2_ap_expert_reference_summary.json`. Metric code is `cxr-segmentation-validation/evaluate_segmentation.py` |
 | Table S3, mask failure and agreement | `results/supplement/Table_S3_segmentation_agreement_fallback_classification_error.csv`. Rebuild with `mask_analysis/summarize_mask_source_failure_table.py` and `mask_analysis/analyze_segmentation_quality_proxies.py` |
 | Table S6, model and software record | `results/supplement/Table_S6_model_checkpoint_software.md`, rebuilt by `tools/export_table_s6.py` |
 | Supplementary Figure S1, calibration curves | `figures/plot_figure_s1_calibration.py` using `results/figures/Supplementary_Figure_S1_calibration_bins.csv` |
-| Table S11, clustered DeLong statistics | `results/primary/Table_S11_clustered_delong_delta_auroc.csv`. Rebuild with `evaluation/clustered_delong_delta_auroc.py` |
+| Table 4 p-values, clustered DeLong source | `results/primary/Table_4_clustered_delong_source.csv`, the numeric source of the Table 4 p-values. Rebuild with `evaluation/clustered_delong_delta_auroc.py` |
 | Table S7, lung-field attribution | `results/supplement/Table_S7_lung_field_attribution_concentration.csv` (2,000 replicates). Rebuild with `interpretability/analyze_lung_attribution_concentration.py` |
 | Table S8, uncertain-label endpoint | `results/supplement/Table_S8_uncertainty_endpoint_sensitivity.md`. Numeric files are `results/sensitivity/uncertainty_endpoint/`. Rebuild with `evaluation/evaluate_uncertainty_endpoint_sensitivity.py` |
-| Training-policy sensitivity | `evaluation/evaluate_training_policy_sensitivity.py` |
+| Table S11, training-policy sensitivity | `results/sensitivity/training_policy/Table_S11_training_policy_sensitivity.md`. Rebuild the CSV with `evaluation/evaluate_training_policy_sensitivity.py` and format it with `evaluation/format_table_s11_training_policy.py` |
 | Grad-CAM figures | `interpretability/generate_gradcam_pneumonia.py` and `interpretability/generate_figure6_gradcam.py`. Write the output outside this repository. The published heatmaps need the unreleased fold checkpoints |
 | Expert-reference Dice, IoU, and HD95 | `cxr-segmentation-validation/evaluate_segmentation.py` |
 
@@ -360,9 +379,10 @@ and `checkpoints/trained_checkpoint_manifest.csv`.
 
 **Evaluation outputs.** Aggregate evaluation results are in `results/`,
 including the 20,000-replicate paired intervals used in Table 4 and Figure 5,
-the clustered DeLong Table 4 and Table S11, fold-level Table S1, input-geometry
-Table S4, operating-point Table S5, lung-attribution Table S7, and uncertain-label
-Table S8.
+the clustered DeLong p-values of Table 4, Tables 3, 5, 6, and 7, fold-level Table S1,
+expert-reference Table S2, Table S3, input-geometry Table S4, operating-point
+Table S5, Table S6, lung-attribution Table S7, uncertain-label Table S8, and
+Tables S9, S10, and S11.
 Patient-level or image-level prediction files containing MIMIC-CXR identifiers
 are not redistributed. Credentialed users of MIMIC-CXR-JPG can regenerate
 these outputs using the released evaluation scripts and fixed patient-partition
@@ -393,13 +413,13 @@ runs; approximate, and includes data loading):
 
 | Backbone | Median per run | Range |
 | --- | --- | --- |
-| DINOv3-base | 1.3 h | 1.0-1.5 h |
-| EVA-X-base | 1.3 h | 1.1-1.4 h |
-| DenseNet | 1.3 h | 1.2-1.4 h |
-| ResNet152 | 2.0 h | 1.9-2.5 h |
-| ConvNeXtV2-base | 2.6 h | 2.3-2.9 h |
+| DINOv3-Base | 1.3 h | 1.0-1.5 h |
+| EVA-X-Base | 1.3 h | 1.1-1.4 h |
+| DenseNet-201 | 1.3 h | 1.2-1.4 h |
+| ResNet-152 | 2.0 h | 1.9-2.5 h |
+| ConvNeXt V2-Base | 2.6 h | 2.3-2.9 h |
 | RAD-DINO | 3.4 h | 2.8-5.2 h |
-| Swin-T-base | 4.1 h | 3.8-4.7 h |
+| Swin V2-Base | 4.1 h | 3.8-4.7 h |
 
 The 70 primary runs took about 162 GPU-hours in total (roughly 7 days on one
 GPU). The control, seed, and training-policy sweeps are additional. One

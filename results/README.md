@@ -21,19 +21,24 @@ Trained checkpoints are not in this directory. See `checkpoints/README.md`.
 | `primary/paired_delta_by_backbone.csv` | Paired differences by backbone. Table 4 and Figure 5 intervals use 20,000 subject-level replicates |
 | `primary/paired_delta_pooled.csv` | Same contrasts pooled across backbones, also 20,000 replicates |
 | `primary/Table_4_delta_auroc_vs_raw.md` | Manuscript Table 4. Intervals are the 20,000-replicate percentile intervals; p-values are clustered DeLong |
+| `primary/Table_4_clustered_delong_source.csv` | Numeric source of the Table 4 p-values (clustered DeLong) |
+| `primary/Table_5_mean_by_preprocessing.md` | Manuscript Table 5, formatted from `aggregate_metrics.csv` |
 | `primary/canonical_70runs.txt` | Run-folder names of the 70 configurations |
 | `primary/Table_S1_fold_level_validation_performance.csv` | Supplementary Table S1, five validation folds |
 | `primary/Table_S4_input_geometry_characteristics.csv` | Supplementary Table S4 |
 | `primary/Table_S5_operating_point_and_calibration.csv` | Supplementary Table S5, 2,000-replicate operating-point intervals |
-| `primary/Table_S11_clustered_delong_delta_auroc.md` | Supplementary Table S11, clustered DeLong standard errors and test statistics for ΔAUROC versus raw |
-| `primary/Table_S11_clustered_delong_delta_auroc.csv` | Numeric source for Table S11 |
+| `supplement/Table_3_expert_reference_lung_segmentation.md` | Manuscript Table 3 |
+| `supplement/Table_S2_expert_reference_lung_segmentation.md` | Supplementary Table S2, Panels A to C |
 | `supplement/Table_S2_pa200_expert_reference_summary.json` | Table S2 Panels A and B and Table 3, PA expert-reference scores for the 200 public contours (all, overlap with the study cohort, outside it). Counts and summary statistics only |
 | `supplement/Table_S7_lung_field_attribution_concentration.csv` | Table S7, lung-field attribution, 2,000-replicate intervals |
 | `supplement/Table_S8_uncertainty_endpoint_sensitivity.md` | Table S8, CheXpert uncertain-label endpoint. Source CSVs are in `sensitivity/uncertainty_endpoint/` |
 | `figures/` | Figure 5 and Supplementary Figure S1, drawn from the released tables |
-| `supplement/` | Identifier-free Supplementary Tables S2, S3, S6, S7, and S8 |
+| `supplement/` | Identifier-free Table 3 and Supplementary Tables S2, S3, S6, S7, and S8 |
 | `sensitivity/preprocessing_controls/Table_6_preprocessing_controls.md` | Table 6, formatted from the 2,000-replicate control file |
+| `sensitivity/preprocessing_controls/Table_S9_preprocessing_controls_by_backbone.md` | Supplementary Table S9, from the same file |
 | `sensitivity/seed_robustness/Table_7_training_seed_robustness.md` | Table 7, formatted from the two-backbone seed summary |
+| `sensitivity/seed_robustness/Table_S10_training_seed_robustness.md` | Supplementary Table S10, Panels A to D |
+| `sensitivity/training_policy/Table_S11_training_policy_sensitivity.md` | Supplementary Table S11, training-policy sensitivity |
 | `sensitivity/` | Preprocessing-control, training-seed, uncertainty-endpoint, and training-policy summaries. Controls remain the manuscript 2,000-replicate estimates |
 
 Marginal AUROC and AUPRC intervals in `aggregate_metrics.csv` and
