@@ -1,6 +1,6 @@
 # Training-seed robustness of paired preprocessing effects
 
-Manuscript versions: Table 7 is the eight-row two-backbone mean (`paper_tables/Table_7_training_seed_robustness.md`). Supplementary Table S10 holds panels A–D (`paper_tables/Supplementary_Table_S10_training_seed_robustness.md`).
+Manuscript versions: Table 7 is the eight-row two-backbone mean (`Table_7_training_seed_robustness.md`). Supplementary Table S10 holds panels A–D (`Table_S10_training_seed_robustness.md`). Both are written from the CSV files in this directory by `evaluation/format_table7_training_seed.py` and `evaluation/format_table_s10_training_seed.py`.
 
 Patient partitions were held fixed. Every run of a given view used the same outer-test patients and the same five development folds (split seed 42; subject lists hashed to one value per view across all 30 runs). Only the training seed changed: 42 (the canonical run), 123, and 2026. Each AUROC is the five-model ensemble on the untouched outer-test set.
 
