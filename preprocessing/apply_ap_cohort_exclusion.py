@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """
 AP cohort에서 CheXMask 폐 RLE가 없는 영상을 모든 preprocessing
-manifest·split CSV에서 제외합니다. 제외 ID는 credentialed release의
-``splits/AP_excluded_dicom_ids.json``에서 읽습니다.
+manifest·split CSV에서 제외합니다. 제외 ID는 ``splits/AP_excluded_dicom_ids.json``
+(``{"excluded_dicom_ids": [...]}``)에서 읽습니다. 이 파일은 배포하지 않으므로,
+CheXMask 표에서 Left/Right Lung RLE가 비어 있는 AP cohort 영상의 dicom_id로
+직접 만듭니다.
+
+주의: AP 분할 CSV는 제외 전 cohort(22,899장)로 먼저 만든 뒤 이 스크립트로
+5장을 제거해야 공개 SHA256과 일치합니다. 제외 후 cohort로 분할하면 다른 분할이 됩니다.
 
 실행:
   python3 apply_ap_cohort_exclusion.py
@@ -39,8 +44,9 @@ def _load_excluded_dicom_ids() -> Set[str]:
     path = SPLIT_DIR / "AP_excluded_dicom_ids.json"
     if not path.is_file():
         raise FileNotFoundError(
-            f"credentialed exclusion file not found: {path}. "
-            "Download it from the companion PhysioNet project."
+            f"exclusion file not found: {path}. Create it as "
+            '{"excluded_dicom_ids": [...]} with the AP cohort dicom_ids whose '
+            "CheXMask Left/Right Lung RLE is missing (see splits/README.md)."
         )
     with path.open("r", encoding="utf-8") as handle:
         payload = json.load(handle)

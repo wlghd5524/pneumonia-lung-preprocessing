@@ -18,5 +18,5 @@
     "outer_test_images": 2521,
     "trainval_images": 16088
   },
-  "identifier_files": "Available only through the credentialed companion PhysioNet project."
+  "identifier_files": "Not distributed. Regenerate with training/build_fixed_patient_splits.py and verify against splits/README.md."
 }
