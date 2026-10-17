@@ -4,8 +4,8 @@ Reproducibility package for the revised manuscript.
 
 | Item | Value |
 | --- | --- |
-| Release tag | `v1.0` (snapshot corresponding to the manuscript) |
-| Zenodo DOI | Not issued yet. Add it here after the GitHub release is archived. |
+| Release tag | `v1.1` (snapshot corresponding to the manuscript) |
+| DOI | None. This release is identified by its Git tag and commit. |
 | Python | 3.12 (reference run: 3.12.3) |
 | Reference environment | `configs/reference_environment.json` and `requirements.txt` |
 | GPU stack used for the reported runs | CUDA 13.0, cuDNN 9.15.0, PyTorch 2.10.0 (NVIDIA build) |
