@@ -260,22 +260,22 @@ def write_lines(path: Path, lines: list[str]) -> None:
 def write_table(path: Path, rows: list[dict]) -> None:
     n_boot = rows[0]["boot_n_boot"]
     lines = [
-        "# Table 4. Per-backbone ΔAUROC versus raw",
+        "# Table 4. Per-backbone ΔAUROC versus raw input",
         "",
         (
             "Paired comparisons of each lung preprocessing condition with raw input on the held-out internal "
             "test set for each backbone and acquisition view. ΔAUROC is the image-level AUROC of the "
-            "preprocessed model minus that of the raw model, calculated from unrounded estimates. "
-            f"95% CIs are percentile intervals from a paired subject-level cluster bootstrap ({n_boot:,} "
-            "replicates) and are not adjusted for multiple comparisons. P values are from a two-sided "
-            "asymptotic test of the paired AUROC difference using the clustered DeLong variance "
-            "(Obuchowski, 1997), which accounts for the pairing of the two models on the same radiographs and "
-            f"for correlation among radiographs from the same subject. P values were adjusted jointly across the "
-            f"{len(rows)} preprocessing-versus-raw comparisons using the Holm procedure; adjustment was applied "
-            "to unrounded P values. Standard errors and test statistics are given in the supplementary table."
+            "preprocessed model minus that of the corresponding raw-input model, calculated from unrounded "
+            f"estimates. Pointwise 95% CIs are percentile intervals obtained from {n_boot:,} paired "
+            "subject-level cluster bootstrap replicates and are not adjusted for multiple comparisons. "
+            "Unadjusted two-sided p-values were calculated using a subject-clustered DeLong-type test that "
+            "accounts for paired predictions on the same radiographs and correlations among radiographs from "
+            f"the same patient. The Holm procedure was applied jointly to the {len(rows)} "
+            "preprocessing-versus-raw comparisons using unrounded p-values. Both unadjusted and Holm-adjusted "
+            "p-values are reported."
         ),
         "",
-        "| View | Backbone | Preprocessing | Raw AUROC | Preprocessed AUROC | ΔAUROC vs. Raw (95% CI) | Unadjusted p | Holm-adjusted p |",
+        "| View | Backbone | Preprocessing | Raw AUROC | Preprocessed AUROC | ΔAUROC vs. Raw [95% CI] | Unadjusted p | Holm-adjusted p |",
         "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in rows:
@@ -284,31 +284,6 @@ def write_table(path: Path, rows: list[dict]) -> None:
             f"| {row['view']} | {MODEL_LABELS[row['model']]} | {MODE_LABELS[row['mode_b']]} | "
             f"{row['auc_a']:.4f} | {row['auc_b']:.4f} | {ci} | "
             f"{fmt_p(row['delta_auc_p'])} | {fmt_p(row['delta_auc_p_holm'])} |"
-        )
-    write_lines(path, lines)
-
-
-def write_supplementary_table(path: Path, rows: list[dict]) -> None:
-    n_boot = rows[0]["boot_n_boot"]
-    lines = [
-        "# Supplementary Table S11. Clustered DeLong test statistics for ΔAUROC versus raw",
-        "",
-        (
-            "SE is the clustered DeLong standard error of ΔAUROC (Obuchowski, 1997) and z = ΔAUROC / SE. "
-            "Unclustered SE is the paired DeLong standard error with every radiograph treated as independent. "
-            f"Bootstrap SE is the standard deviation of the {n_boot:,} paired subject-level cluster bootstrap "
-            "replicates used for the 95% CIs in Table 4. P values match Table 4."
-        ),
-        "",
-        "| View | Backbone | Preprocessing | ΔAUROC | SE | z | Unadjusted p | Holm-adjusted p | Unclustered SE | Bootstrap SE |",
-        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
-    ]
-    for row in rows:
-        lines.append(
-            f"| {row['view']} | {MODEL_LABELS[row['model']]} | {MODE_LABELS[row['mode_b']]} | "
-            f"{row['delta_auc']:+.4f} | {row['delta_auc_se']:.4f} | {row['delta_auc_z']:+.2f} | "
-            f"{fmt_p(row['delta_auc_p'])} | {fmt_p(row['delta_auc_p_holm'])} | "
-            f"{row['delta_auc_se_unclustered']:.4f} | {row['boot_delta_auc_se']:.4f} |"
         )
     write_lines(path, lines)
 
@@ -333,18 +308,12 @@ def main():
         type=Path,
         default=RESULTS_ROOT / "paper_tables" / "Table4_delta_auroc_vs_raw_clustered_delong.md",
     )
-    parser.add_argument(
-        "--out-supp-table",
-        type=Path,
-        default=RESULTS_ROOT / "paper_tables" / "Table_S11_clustered_delong_delta_auroc.md",
-    )
     args = parser.parse_args()
 
     runs = load_runs(args.results_root, args.min_run_date, args.runs_file)
     rows = build_rows(runs, load_bootstrap(args.bootstrap_csv))
     write_csv(args.out_csv, rows)
     write_table(args.out_table, rows)
-    write_supplementary_table(args.out_supp_table, rows)
 
     print("\ncontrasts with Holm p < 0.05:", flush=True)
     shown = sorted((r for r in rows if r["delta_auc_p_holm"] < 0.05), key=lambda r: r["delta_auc_p"])

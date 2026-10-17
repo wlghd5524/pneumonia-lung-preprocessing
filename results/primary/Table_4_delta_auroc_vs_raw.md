@@ -1,8 +1,8 @@
-# Table 4. Per-backbone ΔAUROC versus raw
+# Table 4. Per-backbone ΔAUROC versus raw input
 
-Paired comparisons of each lung preprocessing condition with raw input on the held-out internal test set for each backbone and acquisition view. ΔAUROC is the image-level AUROC of the preprocessed model minus that of the raw model, calculated from unrounded estimates. 95% CIs are percentile intervals from a paired subject-level cluster bootstrap (20,000 replicates) and are not adjusted for multiple comparisons. P values are from a two-sided asymptotic test of the paired AUROC difference using the clustered DeLong variance (Obuchowski, 1997), which accounts for the pairing of the two models on the same radiographs and for correlation among radiographs from the same subject. P values were adjusted jointly across the 56 preprocessing-versus-raw comparisons using the Holm procedure; adjustment was applied to unrounded P values. Standard errors and test statistics are given in the supplementary table.
+Paired comparisons of each lung preprocessing condition with raw input on the held-out internal test set for each backbone and acquisition view. ΔAUROC is the image-level AUROC of the preprocessed model minus that of the corresponding raw-input model, calculated from unrounded estimates. Pointwise 95% CIs are percentile intervals obtained from 20,000 paired subject-level cluster bootstrap replicates and are not adjusted for multiple comparisons. Unadjusted two-sided p-values were calculated using a subject-clustered DeLong-type test that accounts for paired predictions on the same radiographs and correlations among radiographs from the same patient. The Holm procedure was applied jointly to the 56 preprocessing-versus-raw comparisons using unrounded p-values. Both unadjusted and Holm-adjusted p-values are reported.
 
-| View | Backbone | Preprocessing | Raw AUROC | Preprocessed AUROC | ΔAUROC vs. Raw (95% CI) | Unadjusted p | Holm-adjusted p |
+| View | Backbone | Preprocessing | Raw AUROC | Preprocessed AUROC | ΔAUROC vs. Raw [95% CI] | Unadjusted p | Holm-adjusted p |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | AP | ResNet-152 | MedSAM3 mask | 0.7860 | 0.7826 | -0.0034 [-0.0110, +0.0044] | 0.393 | 1.000 |
 | AP | ResNet-152 | MedSAM3 crop | 0.7860 | 0.7893 | +0.0034 [-0.0022, +0.0090] | 0.238 | 1.000 |
