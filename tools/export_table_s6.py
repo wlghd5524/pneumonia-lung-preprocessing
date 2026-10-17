@@ -17,6 +17,16 @@ MANIFEST = ROOT / "checkpoints" / "trained_checkpoint_manifest.csv"
 DEST_CSV = ROOT / "results" / "supplement" / "Table_S6_model_checkpoint_software.csv"
 DEST_MD = ROOT / "results" / "supplement" / "Table_S6_model_checkpoint_software.md"
 
+BACKBONE_LABELS = {
+    "resnet152": "ResNet-152",
+    "densenet201": "DenseNet-201",
+    "convnextv2_base": "ConvNeXt V2-Base",
+    "swinv2_base": "Swin V2-Base",
+    "dinov3_base": "DINOv3-Base",
+    "eva_x_base": "EVA-X-Base",
+    "rad_dino": "RAD-DINO",
+}
+
 ARCH_CONFIG = {
     "resnet152": "configs/ap/raw_resnet152.json",
     "densenet201": "configs/ap/raw_densenet201.json",
@@ -26,6 +36,12 @@ ARCH_CONFIG = {
     "eva_x_base": "configs/ap/raw_eva_x_base.json",
     "rad_dino": "configs/ap/raw_rad_dino.json",
 }
+
+
+def lr_text(value: float) -> str:
+    mantissa, exponent = f"{value:.0e}".split("e")
+    superscript = str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹")
+    return f"{mantissa} × 10{str(int(exponent)).translate(superscript)}"
 
 
 def main() -> None:
@@ -70,24 +86,105 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
+    cfg = json.loads((ROOT / ARCH_CONFIG["resnet152"]).read_text(encoding="utf-8"))
+    pkgs = env["packages"]
+    head = models["classifier_head"]
+    infer = seg["inference"]
+    runtime = infer["runtime"]
     lines = [
-        "# Supplementary Table S6. Model, checkpoint, and software record",
+        "# Table S6. Model, Checkpoint, and Software Reproducibility Details",
         "",
-        f"Python {env['python']}; CUDA {env['cuda_runtime']}; cuDNN {env['cudnn']}; "
-        f"PyTorch {env['packages']['torch']}.",
-        f"The checkpoint manifest lists {n_checkpoints} fold files and stores sizes and SHA256 values only. "
-        "The weight files are not in this repository. Retraining uses the configs, seeds, and "
-        "initialization sources above; the resulting weights are not expected to match those checksums exactly.",
+        "## A. Classification training configuration",
         "",
-        "| Backbone | Model | Source | Pin | Precision | Checkpoint rule |",
-        "| --- | --- | --- | --- | --- | --- |",
+        "| Parameter | Setting |",
+        "| --- | --- |",
+        f"| Input resolution | {cfg['input_size']} × {cfg['input_size']} |",
+        f"| Maximum epochs | {cfg['epochs']} |",
+        f"| Batch size | {cfg['batch_size']} |",
+        f"| Learning rate | {lr_text(cfg['learning_rate'])} |",
+        f"| Weight decay | {cfg['weight_decay']} |",
+        "| Optimizer | AdamW |",
+        f"| Dropout | {cfg['dropout']} |",
+        "| Loss | Weighted BCE |",
+        "| LR scheduler | Cosine annealing |",
+        f"| Warm-up | {cfg['warmup_epochs']} epochs |",
+        f"| Training seed | {cfg['seed']} |",
+        f"| Split seed | {cfg['split_seed']} |",
+        "",
+        "## B. Backbones",
+        "",
+        "All seven backbones used 512×512 inputs and were fully fine-tuned. Best checkpoints were selected by "
+        "validation AUROC.",
+        "",
+        "| Backbone | Pretrained checkpoint/source | Classifier head |",
+        "| --- | --- | --- |",
     ]
-    for row in rows:
-        lines.append(
-            f"| {row['backbone']} | {row['model_name']} | {row['source']} | {row['pin']} | "
-            f"{row['precision']} | {row['checkpoint_rule']} |"
-        )
-    lines.append("")
+    for key, label in BACKBONE_LABELS.items():
+        record = models["classification_backbones"][key]
+        if key == "eva_x_base":
+            source = record["weight_file"]
+        elif key == "rad_dino":
+            source = (
+                f"Hugging Face {record['pretrained_repository']}; cached snapshot used in this study: "
+                f"{record['commit']}; model.safetensors SHA-256: {record['weight_sha256']}"
+            )
+        else:
+            source = record["pretrained_repository"]
+        lines.append(f"| {label} | {source} | {head} |")
+    lines.extend([
+        "",
+        "For RAD-DINO, the model was loaded using AutoModel.from_pretrained(\"microsoft/rad-dino\") without an "
+        "explicitly pinned revision; the snapshot identifier and SHA-256 hash reported above identify the locally "
+        "cached public checkpoint used for the experiments reported in this study.",
+        "",
+        "## C. Lung segmentation inference",
+        "",
+        "| Item | Recorded value |",
+        "| --- | --- |",
+        f"| MedSAM3 base | {seg['base_model']['huggingface_repository']}; revision {seg['base_model']['huggingface_commit']} |",
+        f"| SAM3 checkpoint | {seg['base_model']['weight_file']}; SHA-256 unavailable on this classification host |",
+        "| LoRA weights | MedSAM3/weights/best_lora_weights.pt; SHA-256 unavailable on this classification host |",
+        f"| LoRA configuration | rank {infer['lora_rank']}; alpha {infer['lora_alpha']}; dropout "
+        f"{infer['lora_dropout_at_inference']} during inference |",
+        f"| Repository commits | MedSAM3 {seg['medsam3_code']['git_commit']}; SAM3 {seg['base_model']['git_commit']} |",
+        f"| MedSAM3 input / prompt | {infer['input_size']}×{infer['input_size']}; channel-wise mean and SD "
+        f"{infer['normalization_mean']}; text prompt {infer['text_prompt']} |",
+        f"| Detection / NMS | confidence >{infer['detection_confidence_threshold']}; NMS IoU {infer['nms_iou']} |",
+        "| Mask decoding | sigmoid and threshold 0.5; bilinear native-size resize; threshold 0.5 again; logical union |",
+        f"| MedSAM3 inference runtime | Python {runtime['python']}; PyTorch {runtime['torch']}; torchvision "
+        f"{runtime['torchvision']}; CUDA {runtime['cuda']}; {runtime['gpu']} |",
+        f"| CheXMask | {seg['chexmask']} |",
+        "",
+        "## D. Classification software/runtime",
+        "",
+        "| Component | Version/details |",
+        "| --- | --- |",
+        f"| Python | {env['python']} |",
+        f"| PyTorch | {pkgs['torch']} |",
+        f"| torchvision | {pkgs['torchvision']} |",
+        f"| timm | {pkgs['timm']} |",
+        f"| transformers | {pkgs['transformers']} |",
+        f"| NumPy | {pkgs['numpy']} |",
+        f"| SciPy | {pkgs['scipy']} |",
+        f"| scikit-learn | {pkgs['scikit-learn']} |",
+        f"| Pillow | {pkgs['Pillow']} |",
+        f"| CUDA reported by PyTorch | {env['cuda_runtime']} |",
+        f"| Classification GPU | {env['gpu']} |",
+        "",
+        "## Additional record in this repository",
+        "",
+        "These entries are not in the manuscript table.",
+        "",
+        f"- The MedSAM3 LoRA file is the upstream public release {seg['lora_checkpoint']['huggingface_repository']} "
+        f"at revision {seg['lora_checkpoint']['huggingface_revision']}; the file downloaded from that revision has "
+        f"SHA-256 {seg['lora_checkpoint']['sha256']} (`checkpoints/README.md`).",
+        f"- cuDNN {env['cudnn']}. Hugging Face commits and SHA-256 values of every initialization source are in "
+        "`Table_S6_model_checkpoint_software.csv` and `configs/models.json`.",
+        f"- The checkpoint manifest lists {n_checkpoints} fold files and stores sizes and SHA256 values only. "
+        "The weight files are not in this repository. Retraining uses the configs, seeds, and initialization "
+        "sources above; the resulting weights are not expected to match those checksums exactly.",
+        "",
+    ])
     DEST_MD.write_text("\n".join(lines), encoding="utf-8")
     print(f"wrote {DEST_CSV}")
     print(f"wrote {DEST_MD}")

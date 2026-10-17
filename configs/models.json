@@ -49,7 +49,9 @@
       "model_name": "microsoft/rad-dino",
       "pretrained_repository": "microsoft/rad-dino",
       "commit": "110cbc18d5133582e320b43d53bf5c44e410c936",
-      "weight_file": "model.safetensors"
+      "weight_file": "model.safetensors",
+      "weight_sha256": "dbfb9f54459c38773505de64a6ab7807bdcb392610fe1e697166342e43fb91ae",
+      "revision_note": "Loaded with AutoModel.from_pretrained(\"microsoft/rad-dino\") without an explicitly pinned revision; the commit and SHA-256 identify the locally cached public snapshot used in the study."
     }
   },
   "lung_segmentation": {
@@ -75,7 +77,35 @@
       "huggingface_file": "best_lora_weights.pt",
       "huggingface_revision": "f579e37e4db9f2c7e85a133b7970d59907e36fec",
       "config": "configs/medsam3_full_lora_config.yaml (copy of the upstream training config with local paths changed; used only to build the model at inference)"
-    }
+    },
+    "inference": {
+      "input_size": 1008,
+      "normalization_mean": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "normalization_std": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "text_prompt": "lung",
+      "detection_confidence_threshold": 0.5,
+      "nms_iou": 0.5,
+      "mask_decoding": "sigmoid and threshold 0.5; bilinear native-size resize (align_corners=False); threshold 0.5 again; logical union",
+      "lora_rank": 16,
+      "lora_alpha": 32,
+      "lora_dropout_at_inference": 0.0,
+      "runtime": {
+        "python": "3.11.14",
+        "torch": "2.10.0+cu128",
+        "torchvision": "0.25.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 4090"
+      }
+    },
+    "chexmask": "Stored PhysioNet CheXMask left- and right-lung RLE masks combined by logical OR; nearest-neighbor resize when required"
   },
   "fine_tuned_classification_checkpoints": {
     "file_name": "best_model.pth",
@@ -83,5 +113,6 @@
     "canonical_run_list": "results/primary/canonical_70runs.txt",
     "manifest": "checkpoints/trained_checkpoint_manifest.csv",
     "distribution_note": "Fold-specific trained checkpoints are not currently redistributed. The manifest records file sizes and SHA256 checksums only."
-  }
+  },
+  "classifier_head": "adaptive GAP → LayerNorm → Dropout(0.2) → Linear(C,256) → GELU → LayerNorm → Dropout(0.2) → Linear(256,2)"
 }
