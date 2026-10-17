@@ -40,7 +40,7 @@ Run the command once for MedSAM3 and once for CheXMask. Each comparison uses the
 
 ## Score the 200 public PA reference contours
 
-The dataset *Heart and lung segmentations for MIMIC-CXR, MIMIC-CXR-JPG, and Montgomery County TB databases* on PhysioNet has expert lung contours for 200 PA radiographs. Part of the set is in the study cohort and the rest is not, so the masks of the rest are built here with the primary pipeline. Everything below runs outside this repository, and the dataset (its license file is ODC-By), MIMIC-CXR-JPG, and the CheXMask table must be downloaded under their own terms.
+The dataset *Heart and lung segmentations for MIMIC-CXR, MIMIC-CXR-JPG, and Montgomery County TB databases* on PhysioNet has expert lung contours for 200 PA radiographs. Part of the set is in the study cohort and the rest is not. As in the manuscript, the cohort images are scored with the masks of the primary pipeline, and the masks of the rest are built here with the same pipeline. Everything below runs outside this repository, and the dataset (its license file is ODC-By), MIMIC-CXR-JPG, and the CheXMask table must be downloaded under their own terms.
 
 ```bash
 python cxr-segmentation-validation/pa200_reference.py prepare \
@@ -56,11 +56,13 @@ python cxr-segmentation-validation/pa200_reference.py summarize \
   --reference-dir /path/outside/this/repo/pa200/reference \
   --medsam3-root /path/outside/this/repo/pa200/medsam3 \
   --chexmask-root /path/outside/this/repo/pa200/chexmask \
+  --medsam3-cohort-root "$DATA_BASE_DIR/cxr_medsam3_lung_seg_pa" \
+  --chexmask-cohort-root "$DATA_BASE_DIR/cxr_chexmask_lung_seg_pa" \
   --cohort-json /path/to/pneumonia_labels.json \
   --summary-json /path/to/summary.json
 ```
 
-The summary has counts, mean, SD, median, and quartiles for all 200 images, for the images that are in the study cohort, for those outside it, and for the cohort images by pneumonia label. It has no identifiers. It uses `evaluate_segmentation.py` for Dice, IoU, and HD95, so the definitions match the AP scores. The result is `results/supplement/Table_S2_pa200_expert_reference_summary.json`. MedSAM3 HD95 can differ by about 0.1 px between runs on a GPU, while Dice and IoU do not change at three decimals.
+The summary has counts, mean, SD, median, and quartiles for all 200 images, for the images that are in the study cohort, for those outside it, and for the cohort images by pneumonia label. It has no identifiers. It uses `evaluate_segmentation.py` for Dice, IoU, and HD95, so the definitions match the AP scores. `--medsam3-cohort-root` and `--chexmask-cohort-root` are the `--out-root` folders of the primary PA mask builds (Section 4 of the top-level README). Without them, the cohort images are scored with the masks just rebuilt. The result is `results/supplement/Table_S2_pa200_expert_reference_summary.json`. MedSAM3 output on a GPU changes by a few dozen pixels between runs, so the HD95 of the rebuilt MedSAM3 masks can differ by about 0.1 px from the manuscript; Dice and IoU do not change at three decimals. The notes under `results/supplement/Table_S2_expert_reference_lung_segmentation.md` list the two cells where that happens.
 
 ## Redraw the 100-image sample
 
@@ -89,6 +91,6 @@ https://www.physionet.org/news/post/mimic-derived-datasets-models/
 | 100 new expert lung masks, polygon files, and per-image annotation tables | Not included. They are derived annotations and name individual radiographs. |
 | Annotation guidelines, evaluation protocol, and evaluation code | Included in this directory. |
 | An approved release path for the expert masks | None at present. |
-| Manuscript Dice, IoU, and HD95 | Cannot be recomputed from this repository alone, because the reference masks are not here. |
+| Manuscript AP Dice, IoU, and HD95 | Cannot be recomputed from this repository alone, because the AP reference masks are not here. |
 
 `DATA_GOVERNANCE.md` states the same restriction for the rest of the repository.

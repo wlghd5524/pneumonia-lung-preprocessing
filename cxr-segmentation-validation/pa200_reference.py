@@ -4,7 +4,10 @@
 The reference set is the PhysioNet dataset "Heart and lung segmentations for
 MIMIC-CXR, MIMIC-CXR-JPG, and Montgomery County TB databases" (200 PA
 radiographs). Some of them are in the pneumonia study cohort, so masks from the
-primary pipeline exist for them. The rest are scored with the same pipeline.
+primary pipeline exist for them. The manuscript scored those images with the
+primary-pipeline masks and ran the same pipeline on the rest. Pass the primary
+mask builds with --medsam3-cohort-root and --chexmask-cohort-root to do the
+same; without them, every image is scored with the rebuilt masks.
 
 Two steps, both run outside this repository:
 
@@ -94,14 +97,25 @@ def prepare(args: argparse.Namespace) -> None:
     )
 
 
-def _flat_mask_dir(build_root: Path, target: Path) -> Path:
-    """Symlink every built mask as <dicom_id>.npy so evaluate_segmentation can pair by stem."""
+def _flat_mask_dir(build_root: Path, target: Path, cohort_root: Path | None, overlap: set[str]) -> Path:
+    """Symlink every built mask as <dicom_id>.npy so evaluate_segmentation can pair by stem.
+
+    With cohort_root, images in the study cohort link to the primary-pipeline mask at the
+    same relative path instead of the rebuilt one.
+    """
     target.mkdir(parents=True, exist_ok=True)
-    masks = sorted((build_root / "lung_mask_npy").rglob("*_lung_mask.npy"))
+    mask_root = build_root / "lung_mask_npy"
+    masks = sorted(mask_root.rglob("*_lung_mask.npy"))
     if not masks:
-        raise SystemExit(f"No *_lung_mask.npy files under {build_root / 'lung_mask_npy'}.")
+        raise SystemExit(f"No *_lung_mask.npy files under {mask_root}.")
     for mask in masks:
-        (target / f"{mask.name[: -len('_lung_mask.npy')]}.npy").symlink_to(mask)
+        stem = mask.name[: -len("_lung_mask.npy")]
+        source = mask
+        if cohort_root is not None and stem in overlap:
+            source = cohort_root / "lung_mask_npy" / mask.relative_to(mask_root)
+            if not source.is_file():
+                raise SystemExit(f"Primary-pipeline mask missing for a cohort image: {source}")
+        (target / f"{stem}.npy").symlink_to(source)
     return target
 
 
@@ -126,7 +140,10 @@ def _block(rows: list[dict]) -> dict:
 
 def summarize(args: argparse.Namespace) -> None:
     labels = _cohort_labels(args.cohort_json.resolve())
-    methods = {"MedSAM3": args.medsam3_root.resolve(), "CheXMask": args.chexmask_root.resolve()}
+    methods = {
+        "MedSAM3": (args.medsam3_root.resolve(), args.medsam3_cohort_root),
+        "CheXMask": (args.chexmask_root.resolve(), args.chexmask_cohort_root),
+    }
     result: dict = {
         "reference": "PhysioNet heart and lung segmentations, 200 PA radiographs",
         "metric_code": "cxr-segmentation-validation/evaluate_segmentation.py",
@@ -138,8 +155,9 @@ def summarize(args: argparse.Namespace) -> None:
     result["n_overlap_with_study_cohort"] = len(overlap)
     result["n_outside_study_cohort"] = len(reference_index) - len(overlap)
     with tempfile.TemporaryDirectory() as tmp:
-        for name, root in methods.items():
-            flat = _flat_mask_dir(root, Path(tmp) / name)
+        for name, (root, cohort_root) in methods.items():
+            cohort_root = cohort_root.resolve() if cohort_root is not None else None
+            flat = _flat_mask_dir(root, Path(tmp) / name, cohort_root, overlap)
             summary, rows = seg.score_directories(args.reference_dir.resolve(), flat)
             if summary["n_paired"] != len(reference_index):
                 raise SystemExit(
@@ -148,6 +166,7 @@ def summarize(args: argparse.Namespace) -> None:
             inside = [r for r in rows if r["file_stem"] in overlap]
             outside = [r for r in rows if r["file_stem"] not in overlap]
             result["methods"][name] = {
+                "overlap_masks": "primary pipeline" if cohort_root is not None else "rebuilt",
                 "pairing": {k: v for k, v in summary.items() if k.startswith("n_")},
                 "all": _block(rows),
                 "overlap_with_study_cohort": _block(inside),
@@ -185,6 +204,18 @@ def parse_args() -> argparse.Namespace:
     s.add_argument("--reference-dir", type=Path, required=True, help="<out-dir>/reference")
     s.add_argument("--medsam3-root", type=Path, required=True, help="--out-root of the medsam3 build")
     s.add_argument("--chexmask-root", type=Path, required=True, help="--out-root of the chexmask build")
+    s.add_argument(
+        "--medsam3-cohort-root",
+        type=Path,
+        default=None,
+        help="--out-root of the primary PA medsam3 build; used for the images in the study cohort",
+    )
+    s.add_argument(
+        "--chexmask-cohort-root",
+        type=Path,
+        default=None,
+        help="--out-root of the primary PA chexmask build; used for the images in the study cohort",
+    )
     s.add_argument("--cohort-json", type=Path, required=True, help="pneumonia_labels.json of the study cohort")
     s.add_argument("--summary-json", type=Path, required=True, help="identifier-free summary")
     s.set_defaults(func=summarize)
