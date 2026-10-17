@@ -14,12 +14,12 @@ SOURCE = ROOT / "results" / "sensitivity" / "preprocessing_controls" / "paired_d
 DEST = ROOT / "results" / "sensitivity" / "preprocessing_controls" / "Table_6_preprocessing_controls.md"
 
 CONTRASTS = [
-    ("medsam3_center", "medsam3_crop", "Study crop − Matched center crop", "Little effect of crop location"),
-    ("medsam3_seg", "medsam3_crop", "Study crop − Hard mask", "Crop higher than hard masking"),
-    ("medsam3_soft", "medsam3_crop", "Study crop − Soft mask", "Boundary smoothing does not close the gap"),
-    ("medsam3_soft", "medsam3_seg", "Hard mask − Soft mask", "Limited effect of the sharp boundary alone"),
-    ("raw", "medsam3_seg", "Hard mask − Raw", "Masking lower than raw, particularly on PA"),
-    ("raw", "medsam3_soft", "Soft mask − Raw", "Decrease remains after boundary softening"),
+    ("medsam3_center", "medsam3_crop", "Study crop − Centered crop"),
+    ("medsam3_seg", "medsam3_crop", "Study crop − Hard mask"),
+    ("medsam3_soft", "medsam3_crop", "Study crop − Soft mask"),
+    ("medsam3_soft", "medsam3_seg", "Hard mask − Soft mask"),
+    ("raw", "medsam3_seg", "Hard mask − Raw"),
+    ("raw", "medsam3_soft", "Soft mask − Raw"),
 ]
 
 
@@ -27,7 +27,11 @@ def cell(row: dict) -> str:
     point = float(row["mean_delta_auc"])
     lo = float(row["mean_delta_auc_lo"])
     hi = float(row["mean_delta_auc_hi"])
-    return f"{point:+.4f} ({lo:+.4f}, {hi:+.4f})"
+    return f"{signed(point)} ({signed(lo)}, {signed(hi)})"
+
+
+def signed(value: float) -> str:
+    return f"{value:+.4f}".replace("-", "−")
 
 
 def main() -> None:
@@ -35,27 +39,30 @@ def main() -> None:
         rows = list(csv.DictReader(handle))
     index = {(row["view"], row["mode_a"], row["mode_b"]): row for row in rows}
     lines = [
-        "# Table 6. Controlled classification experiments for separating geometric and masking-related preprocessing effects. "
-        "Values represent mean paired differences across ResNet-152 and EVA-X-Base on the matched outer-test cohorts, "
-        "with 95% confidence intervals estimated using 2,000 subject-level paired cluster-bootstrap replicates. "
-        "Positive values indicate higher performance for the first condition in each contrast. "
+        "# Table 6. Controlled classification experiments for separating geometric and masking-related "
+        "preprocessing effects",
+        "",
+        "Values represent mean paired AUROC differences across ResNet-152 and EVA-X-Base evaluated on the "
+        "matched outer-test cohorts. Ninety-five percent confidence intervals were estimated using 2,000 "
+        "subject-level paired cluster-bootstrap replicates. Positive values indicate higher AUROC for the first "
+        "condition named in each contrast. AP comprised 3,280 radiographs from 1,763 patients and PA comprised "
+        "2,521 radiographs from 1,743 patients. Confidence intervals were not adjusted for multiple comparisons. "
         "Detailed backbone-specific AUROC and AUPRC results are provided in Supplementary Table S9.",
         "",
-        "| Contrast | AP ΔAUROC (95% CI) | PA ΔAUROC (95% CI) | Interpretation |",
-        "| --- | ---: | ---: | --- |",
+        "| Contrast | AP ΔAUROC (95% CI) | PA ΔAUROC (95% CI) |",
+        "| --- | ---: | ---: |",
     ]
-    for mode_a, mode_b, label, interpretation in CONTRASTS:
+    for mode_a, mode_b, label in CONTRASTS:
         ap = index[("AP", mode_a, mode_b)]
         pa = index[("PA", mode_a, mode_b)]
         if int(ap["n_boot_effective"]) != 2000 or int(pa["n_boot_effective"]) != 2000:
             raise RuntimeError(f"{label} is not the 2,000-replicate manuscript estimate")
-        lines.append(f"| {label} | {cell(ap)} | {cell(pa)} | {interpretation} |")
+        lines.append(f"| {label} | {cell(ap)} | {cell(pa)} |")
     lines.extend([
         "",
-        "AP uses 3,280 images from 1,763 patients; PA uses 2,521 images from 1,743 patients. "
-        "The matched center crop uses the width and height of the corresponding MedSAM3 study-crop window "
-        "after its standard padding and before black-border trimming and square padding. "
-        "Intervals are not adjusted for multiple comparisons.",
+        "Centered crop refers to the centered crop with segmentation-matched dimensions. Its width and height "
+        "were obtained from the corresponding MedSAM3-derived study-crop window, whereas the crop window was "
+        "positioned at the image center.",
         "",
     ])
     DEST.write_text("\n".join(lines), encoding="utf-8")

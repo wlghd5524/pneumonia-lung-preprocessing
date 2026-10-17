@@ -1,6 +1,6 @@
 # Table S1. Fold-Level Validation Performance Across All Model Configurations
 
-Validation AUROC and AUPRC are shown for each of the five development folds. Mean and SD are computed across the five folds; SD uses the population convention (division by n=5), matching the 70-run summary. Δ columns are fold-matched preprocessing-minus-raw differences for the same view and backbone. Raw Δ is zero by definition.
+Validation AUROC and AUPRC are shown for each of the five development folds. Mean and SD are computed across the five folds; SD uses the population convention (division by n = 5), matching the 70-run summary. Δ columns are fold-matched preprocessing-minus-raw differences for the same view and backbone.
 
 | View | Preprocessing | Backbone | Fold 1 AUROC/AUPRC | Fold 2 | Fold 3 | Fold 4 | Fold 5 | Mean ± SD AUROC | Mean ± SD AUPRC | Fold ΔAUROC vs raw (1–5) | ΔAUROC mean ± SD |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|---|---:|

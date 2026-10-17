@@ -1,6 +1,6 @@
 # Table S8. Evaluation-Endpoint Sensitivity to CheXpert Uncertain Pneumonia Labels
 
-Trained 5-fold ensembles were **not** retrained. Radiographs with CheXpert `Pneumonia = -1` were scored only if the patient was already in the outer-test split. Two recoding policies were applied at evaluation: **U-Zero** treats uncertain labels as 0, **U-One** treats them as 1. **U-Ignore** is the original 0/1 outer-test endpoint.
+To assess sensitivity to alternative treatments of CheXpert uncertain Pneumonia labels without retraining the classifiers, the trained five-fold ensembles were held fixed and applied to additional Pneumonia = -1 radiographs belonging to patients already assigned to the outer-test split. Three evaluation endpoints were compared: U-Ignore, corresponding to the primary analysis restricted to explicit 0/1 labels; U-Zero, in which uncertain labels were recoded as negative; and U-One, in which uncertain labels were recoded as positive. AUROC and AUPRC were recalculated for all model configurations, together with paired preprocessing-minus-raw differences. This analysis evaluates sensitivity of the evaluation endpoint and does not constitute retraining under alternative uncertainty-label policies.
 
 ## Discrimination
 

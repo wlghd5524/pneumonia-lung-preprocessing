@@ -674,8 +674,8 @@ def paired_delta_table(rows: list[dict]) -> tuple[list[dict], str]:
                             lo_t, hi_t = cluster_bootstrap_median(d_top_arr, np.asarray(d_subj))
                             d_mass_ci = [lo_m, hi_m]
                             d_top_ci = [lo_t, hi_t]
-                            delta_mass_txt = f"{d_mass_med:+.2f} ({lo_m:+.2f} to {hi_m:+.2f})"
-                            delta_top_txt = f"{d_top_med:+.2f} ({lo_t:+.2f} to {hi_t:+.2f})"
+                            delta_mass_txt = f"{d_mass_med:+.2f} [{lo_m:+.2f} to {hi_m:+.2f}]"
+                            delta_top_txt = f"{d_top_med:+.2f} [{lo_t:+.2f} to {hi_t:+.2f}]"
                     if not np.any(np.isfinite(mass_arr)):
                         continue
                     rec = {

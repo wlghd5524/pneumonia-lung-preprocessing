@@ -117,7 +117,7 @@ Bins use the stored lung-area ratio of that mask source. The <10% bin is the fal
 
 ## E. AP expert-reference segmentation versus classification error
 
-This panel uses the 100 AP expert contours in Table S2, Panel B. It is not the cross-source Dice in Panel A. Error is the EVA-X-Base five-fold ensemble probability versus the pneumonia label at threshold 0.5. MedSAM3 expert scores are paired with the MedSAM3 hard-mask and lung-crop models, and CheXMask scores with the corresponding CheXMask models. The raw-image model is the same-image comparator and does not use a lung mask. Comparisons are descriptive on 100 radiographs.
+This panel uses the 100 AP expert contours in Table S2, Panel C. It is not the cross-source Dice in Panel A. Error is the EVA-X-Base five-fold ensemble probability versus the pneumonia label at threshold 0.5. MedSAM3 expert scores are paired with the MedSAM3 hard-mask and lung-crop models, and CheXMask scores with the corresponding CheXMask models. The raw-image model is the same-image comparator and does not use a lung mask. Comparisons are descriptive on 100 radiographs.
 
 ### Error rate by expert Dice
 

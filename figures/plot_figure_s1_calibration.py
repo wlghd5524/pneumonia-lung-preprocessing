@@ -271,13 +271,11 @@ def main() -> None:
         print(f"saved {path}")
 
     CAPTION.write_text(
-        "Supplementary Figure S1. Calibration curves of the five-model ensemble predictions. "
-        "Calibration curves are shown separately for AP and PA radiographs across the evaluated "
-        "preprocessing conditions and backbone architectures. "
-        "(A) AP view. (B) PA view. "
-        "Observed event frequencies are plotted against mean predicted probabilities within "
-        "10 probability bins; the diagonal line represents perfect calibration. "
-        "Corresponding Brier scores and expected calibration errors are reported in Supplementary Table S5.\n",
+        "Figure S1. Calibration curves for the 70 evaluated model configurations. "
+        "(A) AP and (B) PA outer-holdout cohorts. "
+        "Curves show mean predicted probability versus observed event frequency in 10 equal-width bins; "
+        "the dashed diagonal denotes perfect calibration. "
+        "Brier scores and expected calibration error are reported in Supplementary Table S5.\n",
         encoding="utf-8",
     )
     print(f"saved {CAPTION}")

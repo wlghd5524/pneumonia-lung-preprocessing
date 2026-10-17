@@ -198,14 +198,13 @@ def main() -> None:
     caption_path.write_text(
         "Figure 5. Backbone-specific changes in held-out test AUROC relative to raw input "
         "for all four lung preprocessing conditions within each acquisition view. "
-        "(A) AP view. (B) PA view. "
         "Differences are shown for MedSAM3 masking, MedSAM3 cropping, CheXMask masking, "
-        "and CheXMask cropping. "
-        "Positive $\\Delta$AUROC indicates higher discrimination than the matched raw-input model. "
-        "Error bars represent paired subject-level cluster-bootstrap 95% confidence intervals "
-        "based on 20,000 replicates and are shown to convey effect size and uncertainty only. "
-        "Multiplicity-adjusted statistical inference is reported separately "
-        "using Holm-adjusted $p$ values in Table 4.\n",
+        "and CheXMask cropping, with pointwise 95% percentile confidence intervals "
+        "from 20,000 paired subject-level cluster bootstrap replicates. "
+        "These confidence intervals are not adjusted for multiplicity; "
+        "Holm-adjusted p-values for all 56 comparisons are presented in Table 4. "
+        "Positive ΔAUROC values indicate higher AUROC than the corresponding raw-input model, "
+        "whereas negative values indicate lower AUROC.\n",
         encoding="utf-8",
     )
     print(f"saved {caption_path}")

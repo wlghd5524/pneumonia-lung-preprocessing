@@ -245,15 +245,17 @@ def main() -> None:
 
     summary = {"n_ok": len(ok), "n_total": len(rows), "input_size": INPUT_SIZE, "groups": {}}
     lines = [
-        "# Input geometry after 512×512 resize",
+        "# Table S4. Input-Geometry Characteristics of Lung-Focused Preprocessing",
         "",
-        "All classifier inputs are bilinearly resized to 512×512. "
-        "The study crop uses the lung mask only to set a padded rectangular window "
-        "(top 7%, bottom 10%, left/right 5%); pixels inside that rectangle are not suppressed. "
-        "Hard masking sets non-lung pixels to 0 on the full radiograph. "
-        "Extra controls (matched center crop, uniform 0/10/20% margin, Gaussian-blurred soft mask) "
-        "use the same window definitions as the classifiers in Table 6 and Supplementary Table S9. "
-        "Values are median [IQR].",
+        "All classifier inputs were bilinearly resized to 512 × 512. "
+        "The study crop used the lung mask only to define a padded rectangular window "
+        "(top 7%, bottom 10%, and left/right 5%); pixels within this window were not suppressed. "
+        "Hard masking set non-lung pixels to zero while preserving the full radiograph extent. "
+        "For the geometry measurements reported in this table, the additional control transformations "
+        "(matched center crop, uniform 0%, 10%, and 20% margin crops, and Gaussian-blurred soft mask) "
+        "were generated in memory. Separate classifier training for these control conditions was performed "
+        "for the controlled classification experiments described in Section 3.4 and reported in Table 6 and "
+        "Supplementary Table S9. Values are reported as median [IQR].",
         "",
         "| Mask source | View | Metric | Median [IQR] | N |",
         "| --- | --- | --- | ---: | ---: |",
@@ -279,8 +281,13 @@ def main() -> None:
     lines += [
         "",
         "Study crop = current MedSAM3/CheXMask crop used in the 70 trained configurations. "
-        "Matched center crop uses the width and height of that study-crop window, after standard padding and before black-border trimming and square padding, placed at the image center. "
+        "Matched center crop uses the same rectangle size placed at the image center. "
         "Soft mask uses a Gaussian blur with radius 2% of the shorter image side.",
+        "",
+        "**Raw-input reference.** Raw is the uncropped full-image condition. Its retained area is 1.0 and its "
+        "lung-area magnification is 1.0 by definition. Because lung occupancy requires a reference mask, raw "
+        "occupancy is reported separately under the MedSAM3 and CheXMask rows (`Raw lung occupancy in 512²`). "
+        "Crop aspect ratio and hard-mask zero fraction are not properties of the unmodified raw image.",
         "",
     ]
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
