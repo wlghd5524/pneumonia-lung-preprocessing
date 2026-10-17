@@ -52,6 +52,22 @@ Dice, IoU, and HD95 calculation. It does not contain masks or radiograph
 identifiers. A credentialed user supplies local mask directories when running
 that script.
 
+## AP expert lung masks: access on request
+
+The 100 AP expert lung masks are annotations derived from MIMIC-CXR-JPG, so
+they are not in this public repository. Following PhysioNet's terms for
+MIMIC-derived data, the authors provide them on request only to credentialed
+PhysioNet users who have signed the MIMIC-CXR-JPG v2.1.0 data use agreement.
+
+- A request names the requester's PhysioNet account, so that credentialed
+  access to MIMIC-CXR-JPG can be confirmed before anything is sent.
+- The masks are shared under the same data use agreement as the source
+  radiographs and are not to be shared further.
+- Contact the corresponding authors listed in the manuscript.
+
+With the masks, `cxr-segmentation-validation/evaluate_segmentation.py`
+recomputes the AP part of Table 3 and Table S2, Panel C.
+
 The public `splits/` directory contains counts and SHA256 checksums only.
 `.gitignore` blocks `splits/*.csv`. The four CSV files are not distributed. A
 credentialed user generates them locally with the released builder and checks

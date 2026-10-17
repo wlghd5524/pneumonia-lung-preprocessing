@@ -1,6 +1,6 @@
 # Expert-reference lung segmentation
 
-This directory records how the 100 AP expert lung contours were drawn and how Dice, IoU, and HD95 were calculated against them. It contains the procedure and the metric code. Chest radiographs, expert masks, polygon files, and tables that name individual radiographs stay with credentialed users of MIMIC-CXR-JPG.
+This directory records how the 100 AP expert lung contours were drawn and how Dice, IoU, and HD95 were calculated against them. It contains the procedure and the metric code. Chest radiographs, expert masks, polygon files, and tables that name individual radiographs are not in this repository. The 100 AP expert masks are provided on request only to credentialed PhysioNet users of MIMIC-CXR-JPG (see the end of this file).
 
 | File | Contents |
 | --- | --- |
@@ -90,7 +90,7 @@ https://www.physionet.org/news/post/mimic-derived-datasets-models/
 | MIMIC-CXR-JPG radiographs | Not included. Obtain them from PhysioNet under its data use agreement. |
 | 100 new expert lung masks, polygon files, and per-image annotation tables | Not included. They are derived annotations and name individual radiographs. |
 | Annotation guidelines, evaluation protocol, and evaluation code | Included in this directory. |
-| An approved release path for the expert masks | None at present. |
-| Manuscript AP Dice, IoU, and HD95 | Cannot be recomputed from this repository alone, because the AP reference masks are not here. |
+| Access to the 100 AP expert masks | On request, only to credentialed PhysioNet users who have signed the MIMIC-CXR-JPG v2.1.0 data use agreement. The request names the requester's PhysioNet account, the masks are shared under that agreement and are not to be shared further, and requests go to the corresponding authors listed in the manuscript. |
+| Manuscript AP Dice, IoU, and HD95 | Cannot be recomputed from this repository alone. With the masks obtained on request, `evaluate_segmentation.py` recomputes them. |
 
-`DATA_GOVERNANCE.md` states the same restriction for the rest of the repository.
+`DATA_GOVERNANCE.md` states the same access rule and the restrictions for the rest of the repository.

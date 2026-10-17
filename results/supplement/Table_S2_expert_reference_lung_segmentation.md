@@ -53,4 +53,4 @@ Panels A and B and the PA rows of Table 3 are summarized in `Table_S2_pa200_expe
 
 Panel C is summarized in `Table_S2_ap_expert_reference_summary.json`. The AP contours were drawn by one study author who is an infectious disease specialist; sampling and contouring rules are in `cxr-segmentation-validation/`. Technical difficulty means the reader marked rotation, low inspiration, or a difficult lung boundary. Association with classification error is Table S3, Panel E.
 
-Per-image metrics are not distributed because they identify radiographs.
+Per-image metrics are not distributed because they identify radiographs. The 100 AP expert masks are provided on request only to credentialed PhysioNet users of MIMIC-CXR-JPG (`DATA_GOVERNANCE.md`).
