@@ -115,11 +115,12 @@ these, 18,291 studies had an uncertain Pneumonia label (−1) and 168,642 had a
 missing Pneumonia label; these 186,933 studies were excluded. The remaining
 40,894 studies with explicit Pneumonia labels of 0 or 1 were linked to AP/PA
 image metadata, and records without an accessible JPG file were excluded.
-Metadata linkage and image file verification yielded a final cohort of 41,503
-radiographs from 21,612 patients, comprising 17,207 report-derived
-Pneumonia-positive and 24,296 report-derived Pneumonia-negative images: AP
-22,894 images from 11,951 subjects and PA 18,609 images from 12,385 subjects
-(after the AP exclusion below).
+Metadata linkage and image file verification yielded 41,508 radiographs (AP
+22,899 from 11,953 subjects, PA 18,609). Removing the five AP images without a
+CheXMask lung RLE (Section 4) left a final cohort of 41,503 radiographs from
+21,612 patients, comprising 17,207 report-derived Pneumonia-positive and 24,296
+report-derived Pneumonia-negative images: AP 22,894 images from 11,951 subjects
+and PA 18,609 images from 12,385 subjects.
 
 ## 4. Preprocessing
 
@@ -155,8 +156,12 @@ jobs. Crop defaults (component filter, margins, quality check, center-crop
 fallback, square padding) are the script's CLI defaults; `python
 preprocessing/build_cxr_lung_crop_dataset.py --help` prints them.
 
-Five AP images had no usable CheXMask lung RLE and were removed so that every
-preprocessing shared the same images:
+Five AP images have an empty Left Lung and Right Lung RLE in the CheXMask table,
+so they have no CheXMask mask; MedSAM3 masks exist for them. They were removed
+from all four AP lung-mask manifests so that every preprocessing shares the same
+images. The raw condition reads the MedSAM3 manifest, and the preprocessing
+controls copy the cropped MedSAM3 manifest, so both lose the same five images.
+No PA image is affected:
 
 ```bash
 python preprocessing/apply_ap_cohort_exclusion.py --dry-run
@@ -194,10 +199,12 @@ comparison is required.
 **Order matters for AP.** The study drew the AP split on the cohort before the
 five-image exclusion of Section 4 (22,899 images, 11,953 subjects) and removed
 those images afterwards. Building the AP split on the 22,894-image cohort gives
-a different partition (only 8% of the outer-test subjects coincide). So build
-the splits first, then run `apply_ap_cohort_exclusion.py`, which removes the five
-rows from the split CSVs as well as from the manifests. The PA split has no
-exclusion.
+a different partition (266 of the 1,763 outer-test subjects coincide, about
+what two unrelated draws share). So build the splits first, then run
+`apply_ap_cohort_exclusion.py`, which removes the five rows from the split CSVs
+as well as from the manifests. All five rows are in development folds (two in
+fold 1, one in fold 2, two in fold 3), so the outer test is the same before and
+after the removal. The PA split has no exclusion.
 
 1. Build the MedSAM3 and CheXMask datasets (Section 4) up to, but not including,
    `apply_ap_cohort_exclusion.py`.
