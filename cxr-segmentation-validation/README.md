@@ -19,7 +19,7 @@ The metric packages match the pins in the repository `requirements.txt`.
 python cxr-segmentation-validation/evaluate_segmentation.py --self-check
 ```
 
-The check builds small synthetic masks in memory and in a temporary directory. It confirms identical overlap, partial overlap, empty masks, a one-pixel boundary, nearest-neighbor resizing, PNG and `.npy` binarization, and file pairing. It also locks the manuscript HD95 on a pair of disks: boundary-to-foreground distance returns 2.8284271247461903 px, while boundary-to-boundary distance on the same pair returns 3 px.
+The check builds small synthetic masks in memory and in a temporary directory. It confirms identical overlap, partial overlap, empty masks, a one-pixel boundary, nearest-neighbor resizing, PNG and `.npy` binarization, and file pairing. It also locks HD95 on two pairs of disks: overlapping disks score 3 px in both argument orders, and a disk nested inside a larger one scores 4.2426 px, the distance between the two boundaries.
 
 ## Score local masks
 
@@ -62,7 +62,7 @@ python cxr-segmentation-validation/pa200_reference.py summarize \
   --summary-json /path/to/summary.json
 ```
 
-The summary has counts, mean, SD, median, and quartiles for all 200 images, for the images that are in the study cohort, for those outside it, and for the cohort images by pneumonia label. It has no identifiers. It uses `evaluate_segmentation.py` for Dice, IoU, and HD95, so the definitions match the AP scores. `--medsam3-cohort-root` and `--chexmask-cohort-root` are the `--out-root` folders of the primary PA mask builds (Section 4 of the top-level README). Without them, the cohort images are scored with the masks just rebuilt. The result is `results/supplement/Table_S2_pa200_expert_reference_summary.json`. MedSAM3 output on a GPU changes by a few dozen pixels between runs, so the HD95 of the rebuilt MedSAM3 masks can differ by about 0.1 px from the manuscript; Dice and IoU do not change at three decimals. The notes under `results/supplement/Table_S2_expert_reference_lung_segmentation.md` list the two cells where that happens.
+The summary has counts, mean, SD, median, and quartiles for all 200 images, for the images that are in the study cohort, for those outside it, and for the cohort images by pneumonia label. It has no identifiers. It uses `evaluate_segmentation.py` for Dice, IoU, and HD95, so the definitions match the AP scores. `--medsam3-cohort-root` and `--chexmask-cohort-root` are the `--out-root` folders of the primary PA mask builds (Section 4 of the top-level README). Without them, the cohort images are scored with the masks just rebuilt. The result is `results/supplement/Table_S2_pa200_expert_reference_summary.json`. The released summary was made with the 154 non-cohort MedSAM3 masks rebuilt this way. MedSAM3 output on a GPU changes by a few dozen pixels between runs, so another rebuild can move the 154-image MedSAM3 HD95 by about 0.1 px; Dice and IoU do not change at three decimals.
 
 ## Redraw the 100-image sample
 

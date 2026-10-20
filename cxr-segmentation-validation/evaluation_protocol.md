@@ -32,15 +32,17 @@ If both masks are empty, Dice is missing. If the union is empty, IoU is missing.
 
 ## HD95
 
-The reported HD95 is the definition used for the manuscript tables. It stays in this code so a local rescoring of the same masks reproduces those tables.
+HD95 is the symmetric 95th-percentile Hausdorff distance between the two mask boundaries, in pixels at the native radiograph resolution.
 
-The boundary of a mask is the set of foreground pixels removed by one binary erosion (`scipy.ndimage.binary_erosion`, one iteration, `border_value=0`). If that erosion removes every foreground pixel, the foreground itself is used as the boundary.
+The boundary ∂A of a mask A is the set of foreground pixels removed by one binary erosion (`scipy.ndimage.binary_erosion`, default 4-connected structuring element, one iteration, `border_value=0`). For a reference mask R and a predicted mask P:
 
-For each boundary pixel, the distance is the Euclidean distance to the nearest foreground pixel of the other mask. The other mask's interior counts. Distances from the reference boundary to the prediction and from the prediction boundary to the reference are pooled, and `numpy.percentile` takes one 95th percentile of that pool. The unit is pixels.
+- d(r, ∂P) is the Euclidean distance from a boundary pixel r ∈ ∂R to the nearest boundary pixel of P, and d(p, ∂R) is defined the same way for p ∈ ∂P. Both come from `scipy.ndimage.distance_transform_edt` on the complement of the other boundary. A boundary pixel that lies inside the other mask is therefore scored by its distance to the other boundary, not as zero.
+- The two directed distance sets are kept separate. Each is summarized by its 95th percentile (`numpy.percentile`, linear interpolation).
+- HD95(R, P) = max{ P95_{r ∈ ∂R} d(r, ∂P), P95_{p ∈ ∂P} d(p, ∂R) }.
 
-This is not boundary-to-boundary surface distance. On a 64×64 pair of filled disks, radii 10 and 12 pixels with centers one column apart, the manuscript definition returns 2.8284271247461903 px. The 95th percentile of the pooled distances between the two boundaries on that same pair is 3 px. `--self-check` locks the manuscript value.
+This is the convention of MONAI `compute_hausdorff_distance(percentile=95, directed=False)`. On the 100 AP and 200 PA comparisons, MONAI 1.4.0 returns the same per-image values within 0.0003 px (it computes in float32). `--self-check` locks two synthetic cases: a pair of filled disks (radii 10 and 12 pixels, centers one column apart) scores 3 px in both argument orders, and a radius-6 disk inside a concentric radius-10 disk scores 4.2426 px.
 
-This is also not the MONAI Hausdorff distance. MONAI summarizes each direction at the 95th percentile and then takes the larger of those two numbers. This study pools the directed distances first and then takes one percentile.
+Releases up to v1.1 computed a different quantity under the HD95 name: distances from each boundary to the nearest foreground pixel of the other mask, pooled over both directions before one 95th percentile. Boundary pixels inside the other mask then score 0, so that quantity is never larger than the HD95 above. The tables in this release use the definition above.
 
 If either mask is empty, HD95 is missing and that pair is omitted from the HD95 summary. In the reported 100 comparisons, neither method had an empty mask.
 

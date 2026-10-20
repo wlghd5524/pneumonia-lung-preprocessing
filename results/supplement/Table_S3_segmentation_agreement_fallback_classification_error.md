@@ -147,39 +147,39 @@ Values are median [first quartile, third quartile]. The Mann–Whitney test comp
 
 | Mask | Classifier | Outcome | N | Dice | IoU | HD95 (px) |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| MedSAM3 | MedSAM3 hard mask | Correct | 67 | 0.949 [0.923, 0.959] | 0.903 [0.858, 0.920] | 47.7 [32.6, 89.0] |
-| MedSAM3 | MedSAM3 hard mask | Incorrect | 33 | 0.944 [0.913, 0.959] | 0.894 [0.840, 0.921] | 49.0 [37.7, 99.3] |
-| MedSAM3 | MedSAM3 lung crop | Correct | 68 | 0.950 [0.924, 0.959] | 0.904 [0.859, 0.921] | 46.0 [32.6, 90.2] |
-| MedSAM3 | MedSAM3 lung crop | Incorrect | 32 | 0.942 [0.915, 0.958] | 0.891 [0.843, 0.919] | 60.0 [37.9, 98.5] |
-| MedSAM3 | Raw image | Correct | 67 | 0.950 [0.928, 0.960] | 0.906 [0.866, 0.922] | 45.3 [32.6, 87.2] |
-| MedSAM3 | Raw image | Incorrect | 33 | 0.942 [0.910, 0.958] | 0.891 [0.836, 0.919] | 66.0 [39.2, 99.7] |
-| CheXMask | CheXMask hard mask | Correct | 68 | 0.938 [0.896, 0.950] | 0.883 [0.811, 0.906] | 63.9 [46.9, 113.6] |
-| CheXMask | CheXMask hard mask | Incorrect | 32 | 0.932 [0.912, 0.954] | 0.873 [0.839, 0.911] | 64.6 [46.3, 99.5] |
-| CheXMask | CheXMask lung crop | Correct | 68 | 0.937 [0.899, 0.949] | 0.881 [0.816, 0.904] | 64.8 [46.9, 110.4] |
-| CheXMask | CheXMask lung crop | Incorrect | 32 | 0.937 [0.908, 0.954] | 0.882 [0.831, 0.911] | 62.9 [46.3, 112.4] |
-| CheXMask | Raw image | Correct | 67 | 0.938 [0.909, 0.951] | 0.883 [0.832, 0.906] | 63.3 [46.8, 101.2] |
-| CheXMask | Raw image | Incorrect | 33 | 0.930 [0.879, 0.953] | 0.868 [0.784, 0.911] | 65.0 [47.0, 133.2] |
+| MedSAM3 | MedSAM3 hard mask | Correct | 67 | 0.949 [0.923, 0.959] | 0.903 [0.858, 0.920] | 64.9 [44.4, 143.5] |
+| MedSAM3 | MedSAM3 hard mask | Incorrect | 33 | 0.944 [0.913, 0.959] | 0.894 [0.840, 0.921] | 67.9 [48.3, 163.3] |
+| MedSAM3 | MedSAM3 lung crop | Correct | 68 | 0.950 [0.924, 0.959] | 0.904 [0.859, 0.921] | 62.9 [43.5, 140.8] |
+| MedSAM3 | MedSAM3 lung crop | Incorrect | 32 | 0.942 [0.915, 0.958] | 0.891 [0.843, 0.919] | 87.6 [56.5, 180.3] |
+| MedSAM3 | Raw image | Correct | 67 | 0.950 [0.928, 0.960] | 0.906 [0.866, 0.922] | 63.2 [43.1, 131.4] |
+| MedSAM3 | Raw image | Incorrect | 33 | 0.942 [0.910, 0.958] | 0.891 [0.836, 0.919] | 105.7 [54.9, 222.4] |
+| CheXMask | CheXMask hard mask | Correct | 68 | 0.938 [0.896, 0.950] | 0.883 [0.811, 0.906] | 95.8 [59.2, 148.5] |
+| CheXMask | CheXMask hard mask | Incorrect | 32 | 0.932 [0.912, 0.954] | 0.873 [0.839, 0.911] | 80.2 [53.9, 146.8] |
+| CheXMask | CheXMask lung crop | Correct | 68 | 0.937 [0.899, 0.949] | 0.881 [0.816, 0.904] | 90.2 [59.2, 146.8] |
+| CheXMask | CheXMask lung crop | Incorrect | 32 | 0.937 [0.908, 0.954] | 0.882 [0.831, 0.911] | 82.4 [53.9, 152.1] |
+| CheXMask | Raw image | Correct | 67 | 0.938 [0.909, 0.951] | 0.883 [0.832, 0.906] | 88.7 [58.5, 144.4] |
+| CheXMask | Raw image | Incorrect | 33 | 0.930 [0.879, 0.953] | 0.868 [0.784, 0.911] | 85.7 [54.1, 163.0] |
 
 | Mask | Classifier | Metric | Median, incorrect − correct | Mann–Whitney p |
 | --- | --- | --- | ---: | ---: |
 | MedSAM3 | MedSAM3 hard mask | Dice | -0.005 | 0.387 |
 | MedSAM3 | MedSAM3 hard mask | IoU | -0.009 | 0.387 |
-| MedSAM3 | MedSAM3 hard mask | HD95 (px) | 1.3 | 0.502 |
+| MedSAM3 | MedSAM3 hard mask | HD95 (px) | 3.0 | 0.420 |
 | MedSAM3 | MedSAM3 lung crop | Dice | -0.008 | 0.276 |
 | MedSAM3 | MedSAM3 lung crop | IoU | -0.014 | 0.276 |
-| MedSAM3 | MedSAM3 lung crop | HD95 (px) | 14.0 | 0.391 |
+| MedSAM3 | MedSAM3 lung crop | HD95 (px) | 24.7 | 0.190 |
 | MedSAM3 | Raw image | Dice | -0.008 | 0.108 |
 | MedSAM3 | Raw image | IoU | -0.015 | 0.108 |
-| MedSAM3 | Raw image | HD95 (px) | 20.7 | 0.163 |
+| MedSAM3 | Raw image | HD95 (px) | 42.5 | 0.095 |
 | CheXMask | CheXMask hard mask | Dice | -0.006 | 0.804 |
 | CheXMask | CheXMask hard mask | IoU | -0.010 | 0.804 |
-| CheXMask | CheXMask hard mask | HD95 (px) | 0.7 | 0.807 |
+| CheXMask | CheXMask hard mask | HD95 (px) | -15.5 | 0.613 |
 | CheXMask | CheXMask lung crop | Dice | 0.001 | 0.731 |
 | CheXMask | CheXMask lung crop | IoU | 0.001 | 0.731 |
-| CheXMask | CheXMask lung crop | HD95 (px) | -1.9 | 0.807 |
+| CheXMask | CheXMask lung crop | HD95 (px) | -7.8 | 0.765 |
 | CheXMask | Raw image | Dice | -0.008 | 0.649 |
 | CheXMask | Raw image | IoU | -0.014 | 0.649 |
-| CheXMask | Raw image | HD95 (px) | 1.7 | 0.595 |
+| CheXMask | Raw image | HD95 (px) | -3.0 | 0.753 |
 
 ### Within pneumonia class
 

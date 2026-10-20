@@ -321,7 +321,7 @@ predictions of the 70 primary runs (no retraining) and compared with the files i
 | Table S5, operating points | 34 numeric columns equal within 1e-9 |
 | Table S1 | Means and population SDs equal within 1e-15 |
 | Table S4 | Table rows identical |
-| Table S2 Panels A and B and Table 3, PA 200 images | Rebuilt with `cxr-segmentation-validation/pa200_reference.py` from the public reference contours, with the primary-pipeline masks for the 46 cohort images as in the manuscript. Every Dice, IoU, and CheXMask value and every 46-image MedSAM3 value equals the manuscript. The MedSAM3 masks of the other 154 images were rebuilt, and MedSAM3 GPU output changes by a few dozen pixels between runs, so two HD95 cells differ by 0.1 px: 68.2 (manuscript 68.3) for the 154-image mean and 120.6 (manuscript 120.7) for the 200-image SD |
+| Table S2 Panels A and B and Table 3, PA 200 images | Rebuilt with `cxr-segmentation-validation/pa200_reference.py` from the public reference contours, with the primary-pipeline masks for the 46 cohort images. Every Dice, IoU, and HD95 value equals the manuscript. The manuscript HD95 values were computed from the same rebuilt masks for the other 154 images; MedSAM3 GPU output changes by a few dozen pixels between runs, so a new rebuild can move the 154-image MedSAM3 HD95 by about 0.1 px |
 | Patient partition | PA and AP CSVs regenerated with the builder match the SHA256 values in `splits/README.md` (Section 5) |
 
 Table 6, Table 7, and Table S8 were checked for agreement with their CSV sources
@@ -329,8 +329,8 @@ and with Table 4, not recomputed from predictions.
 
 The released tables were also compared cell by cell with the manuscript and its
 supplementary Excel files: Tables 3 to 7, Table S2 to S5, Table S7, and every
-numeric cell of Tables S1, S5, S8, S9, S10, and S11 agree, apart from the two
-PA HD95 cells above. Table 5 has no separate source file; it is formatted from
+numeric cell of Tables S1, S5, S8, S9, S10, and S11 agree. Table 5 has no
+separate source file; it is formatted from
 `aggregate_metrics.csv` with the rounding stated in
 `evaluation/format_table5_preprocessing_means.py`. The AP part of Table S2 needs
 the expert masks, which are not in this release (credentialed PhysioNet users can

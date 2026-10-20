@@ -58,33 +58,29 @@ def dice_iou(reference: np.ndarray, prediction: np.ndarray) -> tuple[float, floa
     return float(dice), float(iou)
 
 
+def boundary(mask: np.ndarray) -> np.ndarray:
+    """Foreground pixels removed by one binary erosion (4-connected, border_value=0)."""
+    return mask ^ ndimage.binary_erosion(mask, iterations=1, border_value=0)
+
+
 def hd95(reference: np.ndarray, prediction: np.ndarray) -> float:
-    """Manuscript HD95: pooled boundary-to-foreground distances.
+    """Symmetric 95th-percentile Hausdorff distance between the two boundaries.
 
-    Each boundary is the foreground removed by one erosion. The distance at a
-    boundary pixel is the Euclidean distance to the nearest foreground pixel
-    of the other mask, including that mask's interior. Both directions are
-    pooled, and the score is one 95th percentile.
-
-    This is the definition behind the reported 100-image results. It is not
-    boundary-to-boundary surface distance, and it is not the maximum of the
-    two directed 95th percentiles used by MONAI. Do not replace the distance
-    target without recomputing those results.
+    For each boundary pixel of one mask, the distance is the Euclidean
+    distance to the nearest boundary pixel of the other mask. The 95th
+    percentile is taken separately in each direction, and the score is the
+    larger of the two. This is the convention of MONAI
+    compute_hausdorff_distance(percentile=95, directed=False).
     """
     reference = reference.astype(bool)
     prediction = prediction.astype(bool)
     if reference.sum() == 0 or prediction.sum() == 0:
         return float("nan")
-    reference_boundary = reference ^ ndimage.binary_erosion(reference, iterations=1, border_value=0)
-    prediction_boundary = prediction ^ ndimage.binary_erosion(prediction, iterations=1, border_value=0)
-    if reference_boundary.sum() == 0:
-        reference_boundary = reference
-    if prediction_boundary.sum() == 0:
-        prediction_boundary = prediction
-    reference_to_prediction = ndimage.distance_transform_edt(~prediction)[reference_boundary]
-    prediction_to_reference = ndimage.distance_transform_edt(~reference)[prediction_boundary]
-    distances = np.concatenate([reference_to_prediction.ravel(), prediction_to_reference.ravel()])
-    return float(np.percentile(distances, 95))
+    reference_boundary = boundary(reference)
+    prediction_boundary = boundary(prediction)
+    reference_to_prediction = ndimage.distance_transform_edt(~prediction_boundary)[reference_boundary]
+    prediction_to_reference = ndimage.distance_transform_edt(~reference_boundary)[prediction_boundary]
+    return float(max(np.percentile(reference_to_prediction, 95), np.percentile(prediction_to_reference, 95)))
 
 
 def summarize(values: list[float]) -> dict:
@@ -217,27 +213,19 @@ def self_check() -> None:
     if not _close(hd95(left, right), 3.0):
         raise SystemExit("single-pixel HD95 changed")
 
-    # Radii 10 and 12, centers one column apart. Boundary-to-foreground HD95
-    # is 2.828 px. Boundary-to-boundary HD95 on the same pair is 3 px.
+    # Radii 10 and 12, centers one column apart: 3 px in both argument orders.
     grid = np.ogrid[:64, :64]
     disk_a = (grid[0] - 32) ** 2 + (grid[1] - 32) ** 2 <= 10 ** 2
     disk_b = (grid[0] - 32) ** 2 + (grid[1] - 33) ** 2 <= 12 ** 2
-    boundary_a = disk_a ^ ndimage.binary_erosion(disk_a, iterations=1, border_value=0)
-    boundary_b = disk_b ^ ndimage.binary_erosion(disk_b, iterations=1, border_value=0)
-    surface = np.concatenate(
-        [
-            ndimage.distance_transform_edt(~boundary_b)[boundary_a].ravel(),
-            ndimage.distance_transform_edt(~boundary_a)[boundary_b].ravel(),
-        ]
-    )
-    paper_hd95 = hd95(disk_a, disk_b)
-    surface_hd95 = float(np.percentile(surface, 95))
-    if not _close(paper_hd95, 2.8284271247461903):
-        raise SystemExit("HD95 no longer matches the manuscript definition")
-    if not _close(surface_hd95, 3.0):
-        raise SystemExit("synthetic surface-distance reference changed")
-    if _close(paper_hd95, surface_hd95):
-        raise SystemExit("HD95 collapsed onto boundary-to-boundary distance")
+    if not (_close(hd95(disk_a, disk_b), 3.0) and _close(hd95(disk_b, disk_a), 3.0)):
+        raise SystemExit("disk-pair HD95 changed")
+
+    # A radius-6 disk inside a concentric radius-10 disk. Its boundary lies in
+    # the other mask's interior, so it must still be scored by its distance to
+    # the other boundary, not as zero. MONAI returns the same 4.243 px.
+    inner = (grid[0] - 32) ** 2 + (grid[1] - 32) ** 2 <= 6 ** 2
+    if not _close(hd95(disk_a, inner), 4.242640687119285):
+        raise SystemExit("HD95 no longer measures boundary-to-boundary distance")
 
     small = np.zeros((2, 2), dtype=bool)
     small[0, 0] = True
