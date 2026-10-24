@@ -23,7 +23,7 @@ saved predictions; it cannot repeat the training.
 | Aggregate metrics and identifier-free manuscript tables | Yes, under `results/`: Tables 3 to 7 and Supplementary Tables S1 to S11. Table 4 uses the 20,000-replicate paired intervals. Per-image tables are not. |
 | Exact patient-partition CSV files | No. They hold MIMIC identifiers. The builder and SHA256 checksums are in `splits/` and `training/`; credentialed users generate the CSVs locally and verify them (Section 5). |
 | Image-level or patient-level prediction files | No. They contain MIMIC-CXR identifiers. Credentialed users can regenerate them. |
-| Expert lung masks and per-image expert tables | No. The annotation procedure and Dice, IoU, and HD95 code are in `cxr-segmentation-validation/`. The 100 AP expert masks are not distributed (`DATA_GOVERNANCE.md`). |
+| Expert lung masks and per-image expert tables | No. The annotation procedure and Dice, IoU, and HD95 code are in `cxr-segmentation-validation/`. The 100 AP expert masks are provided on request only to credentialed PhysioNet users of MIMIC-CXR-JPG (`DATA_GOVERNANCE.md`). |
 | Fold-specific trained checkpoints | No. PhysioNet's policy treats models derived from MIMIC data as sensitive and asks that they be shared on PhysioNet under the source data agreement, so they are not placed on GitHub (`DATA_GOVERNANCE.md`). Architectures, initial weights, configs, seeds, and the checkpoint rule are in this repository and Supplementary Table S6. |
 | MedSAM3 LoRA (`best_lora_weights.pt`) | Not a study checkpoint. It is the authors' public MedSAM3-v1 release; the download command is in Section 2. |
 
@@ -340,7 +340,8 @@ numeric cell of Tables S1, S5, S8, S9, S10, and S11 agree. Table 5 has no
 separate source file; it is formatted from
 `aggregate_metrics.csv` with the rounding stated in
 `evaluation/format_table5_preprocessing_means.py`. The AP part of Table S2 needs
-the expert masks, which are not distributed (`DATA_GOVERNANCE.md`), and Table S7 and Figure 6 need the
+the expert masks, which are not in this release (credentialed PhysioNet users can
+request them, `DATA_GOVERNANCE.md`), and Table S7 and Figure 6 need the
 fold checkpoints, so those are not reproducible from this release alone. Table S3, the controls (Table S9), and the seed
 runs (Table S10) were not rerun.
 

@@ -1,6 +1,6 @@
 # Expert-reference lung segmentation
 
-This directory records how the 100 AP expert lung contours were drawn and how Dice, IoU, and HD95 were calculated against them. It contains the procedure and the metric code. Chest radiographs, expert masks, polygon files, and tables that name individual radiographs are not in this repository. The 100 AP expert masks are not distributed (see the end of this file).
+This directory records how the 100 AP expert lung contours were drawn and how Dice, IoU, and HD95 were calculated against them. It contains the procedure and the metric code. Chest radiographs, expert masks, polygon files, and tables that name individual radiographs are not in this repository. The 100 AP expert masks are provided on request only to credentialed PhysioNet users of MIMIC-CXR-JPG (see the end of this file).
 
 | File | Contents |
 | --- | --- |
@@ -73,7 +73,7 @@ python cxr-segmentation-validation/sample_expert_reference.py \
   --out-dir /path/outside/this/repo/expert_sample
 ```
 
-The script refuses to write inside this repository. Its stdout reports stratum counts and two path-independent checksums. It does not print patient or image identifiers. The sample file is sorted by pneumonia label, stratum, subject identifier, and DICOM identifier. The contouring list is a separate permutation of that sorted file, from a new random generator with the same seed. `identity_matches_locked_sample=true` means the sorted sample matches the locked draw. `annotation_order_matches_locked_sample=true` means the contouring permutation matches the locked review order. The expert masks are not distributed, so the manuscript Dice, IoU, and HD95 values cannot be recomputed from the redrawn list.
+The script refuses to write inside this repository. Its stdout reports stratum counts and two path-independent checksums. It does not print patient or image identifiers. The sample file is sorted by pneumonia label, stratum, subject identifier, and DICOM identifier. The contouring list is a separate permutation of that sorted file, from a new random generator with the same seed. `identity_matches_locked_sample=true` means the sorted sample matches the locked draw. `annotation_order_matches_locked_sample=true` means the contouring permutation matches the locked review order. The expert masks are still required before the manuscript Dice, IoU, and HD95 values can be recomputed.
 
 ## Data availability and restrictions
 
@@ -90,7 +90,7 @@ https://www.physionet.org/news/post/mimic-derived-datasets-models/
 | MIMIC-CXR-JPG radiographs | Not included. Obtain them from PhysioNet under its data use agreement. |
 | 100 new expert lung masks, polygon files, and per-image annotation tables | Not included. They are derived annotations and name individual radiographs. |
 | Annotation guidelines, evaluation protocol, and evaluation code | Included in this directory. |
-| Access to the 100 AP expert masks | None. The authors do not distribute them, neither on PhysioNet nor on request. |
-| Manuscript AP Dice, IoU, and HD95 | Cannot be recomputed, because the masks are not distributed. `evaluate_segmentation.py` scores any contours a credentialed user draws with the same procedure. |
+| Access to the 100 AP expert masks | On request, only to credentialed PhysioNet users who have signed the MIMIC-CXR-JPG v2.1.0 data use agreement. The request names the requester's PhysioNet account, the masks are shared under that agreement and are not to be shared further, and requests go to the corresponding authors listed in the manuscript. |
+| Manuscript AP Dice, IoU, and HD95 | Cannot be recomputed from this repository alone. With the masks obtained on request, `evaluate_segmentation.py` recomputes them. |
 
 `DATA_GOVERNANCE.md` states the same access rule and the restrictions for the rest of the repository.
