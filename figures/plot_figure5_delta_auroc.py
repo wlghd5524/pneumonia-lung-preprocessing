@@ -33,6 +33,11 @@ PREPROCESS = [
 ]
 
 
+def format_count(n: int) -> str:
+    """Thousands separator only for numbers with five or more digits."""
+    return f"{n:,}" if abs(n) >= 10000 else str(n)
+
+
 def draw_panel(ax, frame: pd.DataFrame, color: str, show_ylabel: bool) -> None:
     by_model = {row.model: row for row in frame.itertuples()}
     y_pos = list(range(len(BACKBONES)))[::-1]
@@ -125,7 +130,7 @@ def main() -> None:
         )
         header.text(
             1.0, 0.72,
-            f"{n_subj:,} subjects, {n_img:,} images",
+            f"{format_count(n_subj)} subjects, {format_count(n_img)} images",
             transform=header.transAxes,
             ha="right",
             va="center",
