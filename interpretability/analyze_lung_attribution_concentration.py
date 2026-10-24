@@ -12,7 +12,7 @@ CAM is reprojected to original CXR coordinates, then averaged. Metrics
 are computed on ReLU(mean CAM) before visualization min-max scaling.
 
 Paired crop-minus-raw differences use a subject-level cluster bootstrap
-(2,000 replicates, seed 42), matching the outer-test CI convention.
+(2000 replicates, seed 42), matching the outer-test CI convention.
 """
 from __future__ import annotations
 
@@ -602,7 +602,7 @@ def paired_delta_table(rows: list[dict]) -> tuple[list[dict], str]:
     md_lines = [
         "# Table. Lung-field attribution concentration on the outer-test set",
         "",
-        "Metrics are computed on the five-fold mean Grad-CAM after each fold map is reprojected to original radiograph coordinates. Positive attribution is retained (`ReLU`); visualization min-max scaling is not applied. Hard-mask inputs are excluded. Results are reported independently for MedSAM3- and CheXMask-derived lung regions. Paired differences are crop minus raw on the same image. 95% CIs use a 2,000-replicate subject-level cluster bootstrap (seed 42).",
+        "Metrics are computed on the five-fold mean Grad-CAM after each fold map is reprojected to original radiograph coordinates. Positive attribution is retained (`ReLU`); visualization min-max scaling is not applied. Hard-mask inputs are excluded. Results are reported independently for MedSAM3- and CheXMask-derived lung regions. Paired differences are crop minus raw on the same image. 95% CIs use a 2000-replicate subject-level cluster bootstrap (seed 42).",
         "",
         "| View | Backbone | Input | Reference mask | N | Lung attribution mass, median [IQR] | Δ mass vs raw [95% CI] | Top-10% inside lung, median [IQR] | Δ top-10% vs raw [95% CI] |",
         "|---|---|---|---|---:|---|---|---|---|",

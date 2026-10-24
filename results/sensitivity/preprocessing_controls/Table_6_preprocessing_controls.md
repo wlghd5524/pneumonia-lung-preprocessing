@@ -1,6 +1,6 @@
 # Table 6. Controlled classification experiments for separating geometric and masking-related preprocessing effects
 
-Values represent mean paired AUROC differences across ResNet-152 and EVA-X-Base evaluated on the matched outer-test cohorts. Ninety-five percent confidence intervals were estimated using 2,000 subject-level paired cluster-bootstrap replicates. Positive values indicate higher AUROC for the first condition named in each contrast. AP comprised 3,280 radiographs from 1,763 patients and PA comprised 2,521 radiographs from 1,743 patients. Confidence intervals were not adjusted for multiple comparisons. Detailed backbone-specific AUROC and AUPRC results are provided in Supplementary Table S9.
+Values represent mean paired AUROC differences across ResNet-152 and EVA-X-Base evaluated on the matched outer-test cohorts. Ninety-five percent confidence intervals were estimated using 2000 subject-level paired cluster-bootstrap replicates. Positive values indicate higher AUROC for the first condition named in each contrast. AP comprised 3280 radiographs from 1763 patients and PA comprised 2521 radiographs from 1743 patients. Confidence intervals were not adjusted for multiple comparisons. Detailed backbone-specific AUROC and AUPRC results are provided in Supplementary Table S9.
 
 | Contrast | AP ΔAUROC (95% CI) | PA ΔAUROC (95% CI) |
 | --- | ---: | ---: |

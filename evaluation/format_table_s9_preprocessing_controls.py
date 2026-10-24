@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write Supplementary Table S9 from the released 2,000-replicate control contrasts.
+"""Write Supplementary Table S9 from the released 2000-replicate control contrasts.
 
 One row per backbone, view, and contrast (ResNet-152 and EVA-X-Base). As in
 the manuscript, the ΔAUROC point estimate is the difference of the two AUROC
@@ -66,7 +66,7 @@ def main() -> None:
         "",
         "Each row represents one outer-test contrast for ResNet-152 or EVA-X-Base. Δ denotes the first-named "
         "condition minus the second-named condition. Ninety-five percent confidence intervals and unadjusted "
-        "two-sided p values were estimated using 2,000 subject-level paired cluster-bootstrap replicates. "
+        "two-sided p values were estimated using 2000 subject-level paired cluster-bootstrap replicates. "
         "All comparisons were fully paired on the same outer-test radiographs and labels. The two-backbone mean "
         "estimates for the principal contrasts are summarized in Table 6.",
         "",
@@ -78,7 +78,7 @@ def main() -> None:
             for first, second in CONTRASTS:
                 r = index[(view, model, first, second)]
                 if int(r["n_boot_effective"]) != 2000:
-                    raise RuntimeError(f"{view} {model} {first} − {second} is not the 2,000-replicate estimate")
+                    raise RuntimeError(f"{view} {model} {first} − {second} is not the 2000-replicate estimate")
                 auc_first = round(float(r["auc_b"]), 4)
                 auc_second = round(float(r["auc_a"]), 4)
                 d_auc = (
@@ -96,11 +96,11 @@ def main() -> None:
                 )
     lines.extend([
         "",
-        "AP: 3,280 radiographs from 1,763 patients; PA: 2,521 radiographs from 1,743 patients. All comparisons "
+        "AP: 3280 radiographs from 1763 patients; PA: 2521 radiographs from 1743 patients. All comparisons "
         "were fully paired on the same outer-test radiographs and labels. Δ denotes the first-named condition "
         "minus the second-named condition. AUROC values are reported to four decimal places, and the displayed "
         "ΔAUROC point estimates were calculated from these four-decimal values for numerical consistency; "
-        "confidence intervals were estimated from the original unrounded predictions using 2,000 subject-level "
+        "confidence intervals were estimated from the original unrounded predictions using 2000 subject-level "
         "paired cluster-bootstrap replicates. p values were not adjusted for multiple comparisons and are "
         "reported to three decimal places; values below 0.001 are reported as p < 0.001.",
         "",

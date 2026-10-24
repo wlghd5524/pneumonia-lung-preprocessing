@@ -16,7 +16,7 @@ The Monte Carlo p-value here is p = 2(b + 1) / (B + 1). A bootstrap-SE Wald
 test is stored as a sensitivity analysis. Holm adjustment is applied to the
 56 view x backbone x preprocessing-versus-raw contrasts.
 
-Table 6 and Supplementary Table S9 use 2,000 replicates. Pass --n-boot 2000
+Table 6 and Supplementary Table S9 use 2000 replicates. Pass --n-boot 2000
 for those control runs. The files under results/sensitivity/preprocessing_controls/
 are the manuscript estimates and should not be replaced by a 20,000-replicate run.
 

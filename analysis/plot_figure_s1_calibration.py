@@ -50,6 +50,11 @@ PREPROCESS = [
 N_BINS = 10
 
 
+def format_count(n: int) -> str:
+    """Thousands separator only for numbers with five or more digits."""
+    return f"{n:,}" if abs(n) >= 10000 else str(n)
+
+
 def parse_run(run: str) -> tuple[str, str, str]:
     m = RUN_RE.search(run)
     a = ARCH_RE.match(run)
@@ -228,7 +233,7 @@ def main() -> None:
         header.text(
             1.0,
             0.70,
-            f"{n_subj[view]:,} subjects, {n_img[view]:,} images",
+            f"{format_count(n_subj[view])} subjects, {format_count(n_img[view])} images",
             transform=header.transAxes,
             ha="right",
             va="center",

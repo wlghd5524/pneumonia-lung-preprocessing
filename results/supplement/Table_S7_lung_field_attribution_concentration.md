@@ -1,6 +1,6 @@
 # Table S7. Lung-Field Attribution Concentration on the Outer-Test Set
 
-Metrics are computed on the five-fold mean Grad-CAM after each fold map is reprojected to original radiograph coordinates. Positive attribution is retained (`ReLU`); visualization min-max scaling is not applied. Hard-mask inputs are excluded. Results are reported independently for MedSAM3- and CheXMask-derived lung regions. Paired differences are crop minus raw on the same image. 95% CIs use a 2,000-replicate subject-level cluster bootstrap (seed 42).
+Metrics are computed on the five-fold mean Grad-CAM after each fold map is reprojected to original radiograph coordinates. Positive attribution is retained (`ReLU`); visualization min-max scaling is not applied. Hard-mask inputs are excluded. Results are reported independently for MedSAM3- and CheXMask-derived lung regions. Paired differences are crop minus raw on the same image. 95% CIs use a 2000-replicate subject-level cluster bootstrap (seed 42).
 
 | View | Backbone | Input | Reference mask | N | Lung attribution mass, median [IQR] | Δ mass vs raw [95% CI] | Top-10% inside lung, median [IQR] | Δ top-10% vs raw [95% CI] |
 |---|---|---|---|---:|---|---|---|---|

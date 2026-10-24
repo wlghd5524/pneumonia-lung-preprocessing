@@ -42,6 +42,11 @@ MEDSAM3_FIXED = {
 }
 
 
+def format_count(n: int) -> str:
+    """Thousands separator only for numbers with five or more digits."""
+    return f"{n:,}" if abs(n) >= 10000 else str(n)
+
+
 def remap_mask_path(raw: str) -> Path:
     p = Path(raw)
     if p.is_file():
@@ -167,7 +172,7 @@ def main() -> None:
     ]
     for r in table_rows:
         lines.append(
-            f"| {r['Mask source']} | {r['View']} | {r['Pneumonia']} | {r['N images']:,} | "
+            f"| {r['Mask source']} | {r['View']} | {r['Pneumonia']} | {format_count(r['N images'])} | "
             f"{_fmt(r['Mask failure, n'], r['N images'])} | "
             f"{_fmt(r['Center-crop fallback, n'], r['N images'])} |"
         )

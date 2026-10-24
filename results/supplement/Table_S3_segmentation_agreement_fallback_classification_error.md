@@ -29,11 +29,11 @@ CheXMask mask failure is 0 **in this analysis cohort** because five AP radiograp
 | MedSAM3 | AP | Negative | 11,515 | 0 (0.00%) | 43 (0.37%) |
 | MedSAM3 | AP | Positive | 11,379 | 2 (0.02%) | 67 (0.59%) |
 | MedSAM3 | PA | Negative | 12,781 | 0 (0.00%) | 2 (0.02%) |
-| MedSAM3 | PA | Positive | 5,828 | 0 (0.00%) | 3 (0.05%) |
+| MedSAM3 | PA | Positive | 5828 | 0 (0.00%) | 3 (0.05%) |
 | CheXMask | AP | Negative | 11,515 | 0 (0.00%) | 5 (0.04%) |
 | CheXMask | AP | Positive | 11,379 | 0 (0.00%) | 3 (0.03%) |
 | CheXMask | PA | Negative | 12,781 | 0 (0.00%) | 0 (0.00%) |
-| CheXMask | PA | Positive | 5,828 | 0 (0.00%) | 1 (0.02%) |
+| CheXMask | PA | Positive | 5828 | 0 (0.00%) | 1 (0.02%) |
 
 ## C. Center-crop fallback vs corresponding crop-model error (outer-test set)
 

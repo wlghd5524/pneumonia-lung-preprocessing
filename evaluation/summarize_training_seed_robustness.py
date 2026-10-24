@@ -492,7 +492,7 @@ Scope of the repeat: AP and PA × ResNet-152 and EVA-X-Base × raw, MedSAM3 mask
 
 Δ is preprocessed minus raw, matched on view, backbone, and training seed. Mean and SD are across the three seeds. SD divides by n−1 = 2. Positive means the preprocessed model scored higher than raw.
 
-The outer-test images and labels were the same across seeds and preprocessing conditions within a view (matched on DICOM file name and label): AP 3,280 images, 1,582 pneumonia-positive; PA 2,521 images, 750 pneumonia-positive.
+The outer-test images and labels were the same across seeds and preprocessing conditions within a view (matched on DICOM file name and label): AP 3280 images, 1582 pneumonia-positive; PA 2521 images, 750 pneumonia-positive.
 
 ## 1. Two-backbone mean ΔAUROC versus raw
 

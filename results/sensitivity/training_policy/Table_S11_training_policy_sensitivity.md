@@ -1,6 +1,6 @@
 # Table S11. Training-Policy Sensitivity to CheXpert Uncertain Pneumonia Labels in Representative Model Configurations
 
-ResNet-152 and EVA-X-Base models were retrained for raw and MedSAM3-cropped inputs in the AP and PA cohorts under three training-label policies: Explicit-only, U-Zero, and U-One. Patient-level data partitions were preserved across policies, and validation and outer-test evaluation used the same explicit 0/1 Pneumonia endpoint. AUROC and AUPRC are reported with 95% confidence intervals estimated using 2,000 subject-level cluster bootstrap replicates. ΔAUROC and ΔAUPRC represent paired differences relative to the corresponding Explicit-only model, estimated by resampling the same patients for both models.
+ResNet-152 and EVA-X-Base models were retrained for raw and MedSAM3-cropped inputs in the AP and PA cohorts under three training-label policies: Explicit-only, U-Zero, and U-One. Patient-level data partitions were preserved across policies, and validation and outer-test evaluation used the same explicit 0/1 Pneumonia endpoint. AUROC and AUPRC are reported with 95% confidence intervals estimated using 2000 subject-level cluster bootstrap replicates. ΔAUROC and ΔAUPRC represent paired differences relative to the corresponding Explicit-only model, estimated by resampling the same patients for both models.
 
 | View | Backbone | Input | Training Policy | AUROC (95% CI) | ΔAUROC vs. Explicit-only (95% CI) | AUPRC (95% CI) | ΔAUPRC vs. Explicit-only (95% CI) |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: |

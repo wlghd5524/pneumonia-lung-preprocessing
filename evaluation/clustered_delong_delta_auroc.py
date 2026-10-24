@@ -58,6 +58,11 @@ MODE_LABELS = {
 MODE_ORDER = list(MODE_LABELS)
 
 
+def format_count(n: int) -> str:
+    """Thousands separator only for numbers with five or more digits."""
+    return f"{n:,}" if abs(n) >= 10000 else str(n)
+
+
 def holm_adjust(pvals: np.ndarray) -> np.ndarray:
     """Holm step-down adjusted p-values, capped at 1, in the input order."""
     m = int(pvals.size)
@@ -266,7 +271,7 @@ def write_table(path: Path, rows: list[dict]) -> None:
             "Paired comparisons of each lung preprocessing condition with raw input on the held-out internal "
             "test set for each backbone and acquisition view. ΔAUROC is the image-level AUROC of the "
             "preprocessed model minus that of the corresponding raw-input model, calculated from unrounded "
-            f"estimates. Pointwise 95% CIs are percentile intervals obtained from {n_boot:,} paired "
+            f"estimates. Pointwise 95% CIs are percentile intervals obtained from {format_count(n_boot)} paired "
             "subject-level cluster bootstrap replicates and are not adjusted for multiple comparisons. "
             "Unadjusted two-sided p-values were calculated using a subject-clustered DeLong-type test that "
             "accounts for paired predictions on the same radiographs and correlations among radiographs from "

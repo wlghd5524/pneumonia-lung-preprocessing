@@ -50,6 +50,11 @@ MANIFESTS = {
 }
 
 
+def format_count(n: int) -> str:
+    """Thousands separator only for numbers with five or more digits."""
+    return f"{n:,}" if abs(n) >= 10000 else str(n)
+
+
 def remap(raw: str) -> Path:
     text = str(raw).replace("/mnt/d/CXR-Sepsis-Prediction/IEEE_ICCBE", str(DATA_BASE_DIR))
     text = text.replace("/mnt/e/MIMIC-CXR/physionet.org/files/mimic-cxr-jpg/2.1.0", os.environ.get("MIMIC_CXR_ROOT", str(DATA_BASE_DIR / "data" / "mimic-cxr-jpg" / "2.1.0")))
@@ -275,7 +280,7 @@ def main() -> None:
                     "q1": float(np.percentile(vals, 25)) if vals else None,
                     "q3": float(np.percentile(vals, 75)) if vals else None,
                 }
-                lines.append(f"| {source} | {view} | {label} | {miqr(vals)} | {n:,} |")
+                lines.append(f"| {source} | {view} | {label} | {miqr(vals)} | {format_count(n)} |")
             summary["groups"][f"{source}_{view}"] = block
 
     lines += [

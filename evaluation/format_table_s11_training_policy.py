@@ -39,7 +39,7 @@ def main() -> None:
         "cohorts under three training-label policies: Explicit-only, U-Zero, and U-One. Patient-level data "
         "partitions were preserved across policies, and validation and outer-test evaluation used the same "
         "explicit 0/1 Pneumonia endpoint. AUROC and AUPRC are reported with 95% confidence intervals estimated "
-        "using 2,000 subject-level cluster bootstrap replicates. ΔAUROC and ΔAUPRC represent paired differences "
+        "using 2000 subject-level cluster bootstrap replicates. ΔAUROC and ΔAUPRC represent paired differences "
         "relative to the corresponding Explicit-only model, estimated by resampling the same patients for both "
         "models.",
         "",
@@ -53,7 +53,7 @@ def main() -> None:
                 for policy in POLICIES:
                     r = rows[(view, model, mode, policy)]
                     if int(r["n_boot_effective"]) != 2000:
-                        raise RuntimeError(f"{view} {model} {mode} {policy} is not the 2,000-replicate estimate")
+                        raise RuntimeError(f"{view} {model} {mode} {policy} is not the 2000-replicate estimate")
                     ref = policy == "Explicit-only"
                     lines.append(
                         f"| {view} | {model_label} | {mode_label} | {policy} | {interval(r, 'auroc', False)} | "
